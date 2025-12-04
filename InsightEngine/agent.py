@@ -352,7 +352,7 @@ class DeepSearchAgent:
                 days = 30
             search_kwargs["days"] = days
             search_kwargs["exercise_type"] = search_output.get("exercise_type")
-            search_kwargs["limit"] = search_output.get("limit", 50)
+            search_kwargs["limit"] = search_output.get("limit") or 50
             print(f"  - 查询最近 {days} 天训练记录")
 
         # search_by_date_range: 需要start_date和end_date
@@ -365,7 +365,7 @@ class DeepSearchAgent:
                     search_kwargs["start_date"] = start_date
                     search_kwargs["end_date"] = end_date
                     search_kwargs["exercise_type"] = search_output.get("exercise_type")
-                    search_kwargs["limit"] = search_output.get("limit", 100)
+                    search_kwargs["limit"] = search_output.get("limit") or 100
                     print(f"  - 时间范围: {start_date} 到 {end_date}")
                 else:
                     print(f"    ⚠️ 日期格式错误,改用search_recent_trainings")
@@ -394,7 +394,7 @@ class DeepSearchAgent:
                 search_kwargs["min_distance_km"] = min_distance_km
                 search_kwargs["max_distance_km"] = search_output.get("max_distance_km")
                 search_kwargs["exercise_type"] = search_output.get("exercise_type")
-                search_kwargs["limit"] = search_output.get("limit", 50)
+                search_kwargs["limit"] = search_output.get("limit") or 50
                 print(f"  - 距离范围: {min_distance_km}km+")
             else:
                 print(f"    ⚠️ 缺少min_distance_km参数,改用search_recent_trainings")
@@ -408,7 +408,7 @@ class DeepSearchAgent:
                 search_kwargs["min_avg_hr"] = min_avg_hr
                 search_kwargs["max_avg_hr"] = search_output.get("max_avg_hr")
                 search_kwargs["exercise_type"] = search_output.get("exercise_type")
-                search_kwargs["limit"] = search_output.get("limit", 50)
+                search_kwargs["limit"] = search_output.get("limit") or 50
                 print(f"  - 心率范围: {min_avg_hr}bpm+")
             else:
                 print(f"    ⚠️ 缺少min_avg_hr参数,改用search_recent_trainings")
@@ -536,7 +536,7 @@ class DeepSearchAgent:
                     days = 30
                 search_kwargs["days"] = days
                 search_kwargs["exercise_type"] = reflection_output.get("exercise_type")
-                search_kwargs["limit"] = reflection_output.get("limit", 50)
+                search_kwargs["limit"] = reflection_output.get("limit") or 50
                 print(f"    查询最近 {days} 天训练记录")
 
             # search_by_date_range: 需要start_date和end_date
@@ -549,7 +549,7 @@ class DeepSearchAgent:
                         search_kwargs["start_date"] = start_date
                         search_kwargs["end_date"] = end_date
                         search_kwargs["exercise_type"] = reflection_output.get("exercise_type")
-                        search_kwargs["limit"] = reflection_output.get("limit", 100)
+                        search_kwargs["limit"] = reflection_output.get("limit") or 100
                         print(f"    时间范围: {start_date} 到 {end_date}")
                     else:
                         print(f"      ⚠️ 日期格式错误,改用search_recent_trainings")
@@ -578,7 +578,7 @@ class DeepSearchAgent:
                     search_kwargs["min_distance_km"] = min_distance_km
                     search_kwargs["max_distance_km"] = reflection_output.get("max_distance_km")
                     search_kwargs["exercise_type"] = reflection_output.get("exercise_type")
-                    search_kwargs["limit"] = reflection_output.get("limit", 50)
+                    search_kwargs["limit"] = reflection_output.get("limit") or 50
                     print(f"    距离范围: {min_distance_km}km+")
                 else:
                     print(f"      ⚠️ 缺少min_distance_km参数,改用search_recent_trainings")
@@ -592,7 +592,7 @@ class DeepSearchAgent:
                     search_kwargs["min_avg_hr"] = min_avg_hr
                     search_kwargs["max_avg_hr"] = reflection_output.get("max_avg_hr")
                     search_kwargs["exercise_type"] = reflection_output.get("exercise_type")
-                    search_kwargs["limit"] = reflection_output.get("limit", 50)
+                    search_kwargs["limit"] = reflection_output.get("limit") or 50
                     print(f"    心率范围: {min_avg_hr}bpm+")
                 else:
                     print(f"      ⚠️ 缺少min_avg_hr参数,改用search_recent_trainings")

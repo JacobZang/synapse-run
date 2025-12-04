@@ -313,7 +313,9 @@ class TrainingDataDB:
         stats = raw_results[0]
         # 计算平均配速
         if stats['total_distance'] and stats['total_distance'] > 0:
-            avg_pace = stats['total_duration'] / (stats['total_distance'] / 1000.0)
+            # 将Decimal转换为float以避免类型错误
+            total_distance_km = float(stats['total_distance']) / 1000.0
+            avg_pace = stats['total_duration'] / total_distance_km
             stats['avg_pace_per_km'] = round(avg_pace, 2)
         else:
             stats['avg_pace_per_km'] = None

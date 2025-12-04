@@ -6,6 +6,7 @@
 import json
 from typing import Dict, Any
 from json.decoder import JSONDecodeError
+from datetime import datetime
 
 from .base_node import BaseNode
 from ..prompts import SYSTEM_PROMPT_FIRST_SEARCH, SYSTEM_PROMPT_REFLECTION
@@ -61,11 +62,15 @@ class FirstSearchNode(BaseNode):
                 message = input_data
             else:
                 message = json.dumps(input_data, ensure_ascii=False)
-            
+
+            # 添加当前时间信息
+            current_date = datetime.now().strftime("%Y-%m-%d")
+            time_context = f"【当前日期: {current_date}】\n\n{message}"
+
             self.log_info("正在生成首次搜索查询")
-            
+
             # 调用LLM
-            response = self.llm_client.invoke(SYSTEM_PROMPT_FIRST_SEARCH, message)
+            response = self.llm_client.invoke(SYSTEM_PROMPT_FIRST_SEARCH, time_context)
             
             # 处理响应
             processed_response = self.process_output(response)
@@ -122,15 +127,28 @@ class FirstSearchNode(BaseNode):
             # 验证和清理结果
             search_query = result.get("search_query", "")
             reasoning = result.get("reasoning", "")
-            
+
             if not search_query:
                 self.log_warning("未找到搜索查询，使用默认查询")
                 return self._get_default_search_query()
-            
-            return {
+
+            # 提取所有可能的工具参数
+            response = {
                 "search_query": search_query,
-                "reasoning": reasoning
+                "reasoning": reasoning,
+                "search_tool": result.get("search_tool", "search_recent_trainings"),
+                "days": result.get("days"),
+                "start_date": result.get("start_date"),
+                "end_date": result.get("end_date"),
+                "exercise_type": result.get("exercise_type"),
+                "min_distance_km": result.get("min_distance_km"),
+                "max_distance_km": result.get("max_distance_km"),
+                "min_avg_hr": result.get("min_avg_hr"),
+                "max_avg_hr": result.get("max_avg_hr"),
+                "limit": result.get("limit")
             }
+
+            return response
             
         except Exception as e:
             self.log_error(f"处理输出失败: {str(e)}")
@@ -196,11 +214,15 @@ class ReflectionNode(BaseNode):
                 message = input_data
             else:
                 message = json.dumps(input_data, ensure_ascii=False)
-            
+
+            # 添加当前时间信息
+            current_date = datetime.now().strftime("%Y-%m-%d")
+            time_context = f"【当前日期: {current_date}】\n\n{message}"
+
             self.log_info("正在进行反思并生成新搜索查询")
-            
+
             # 调用LLM
-            response = self.llm_client.invoke(SYSTEM_PROMPT_REFLECTION, message)
+            response = self.llm_client.invoke(SYSTEM_PROMPT_REFLECTION, time_context)
             
             # 处理响应
             processed_response = self.process_output(response)
@@ -257,15 +279,28 @@ class ReflectionNode(BaseNode):
             # 验证和清理结果
             search_query = result.get("search_query", "")
             reasoning = result.get("reasoning", "")
-            
+
             if not search_query:
                 self.log_warning("未找到搜索查询，使用默认查询")
                 return self._get_default_reflection_query()
-            
-            return {
+
+            # 提取所有可能的工具参数
+            response = {
                 "search_query": search_query,
-                "reasoning": reasoning
+                "reasoning": reasoning,
+                "search_tool": result.get("search_tool", "search_recent_trainings"),
+                "days": result.get("days"),
+                "start_date": result.get("start_date"),
+                "end_date": result.get("end_date"),
+                "exercise_type": result.get("exercise_type"),
+                "min_distance_km": result.get("min_distance_km"),
+                "max_distance_km": result.get("max_distance_km"),
+                "min_avg_hr": result.get("min_avg_hr"),
+                "max_avg_hr": result.get("max_avg_hr"),
+                "limit": result.get("limit")
             }
+
+            return response
             
         except Exception as e:
             self.log_error(f"处理输出失败: {str(e)}")
