@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>微舆</title>
+    <title>Synapse Run</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
     <style>
         * {
@@ -751,9 +751,9 @@
     <div class="container">
         <!-- 搜索框区域 -->
         <div class="search-section">
-            <div class="search-title">微舆 - 致力于打造简洁通用的舆情分析平台</div>
+            <div class="search-title">Synapse Run - 多智能体协作的中长跑训练助手</div>
             <div class="search-box">
-                <input type="text" class="search-input" id="searchInput" placeholder="请输入要分析的内容...">
+                <input type="text" class="search-input" id="searchInput" placeholder="请输入训练问题或数据分析需求...">
                 <button class="search-button" id="searchButton">开始</button>
                 <button class="upload-button" id="uploadButton">
                     上传模板
@@ -856,11 +856,11 @@
 
         // 页面头部显示的完整Agent介绍
         const agentTitles = {
-            insight: 'Insight Agent - 私有数据库挖掘',
-            media: 'Media Agent - 多模态内容分析', 
-            query: 'Query Agent - 精准信息搜索',
+            insight: 'Insight Agent - 训练数据深度挖掘',
+            media: 'Media Agent - 多模态内容分析',
+            query: 'Query Agent - 专业知识搜索',
             forum: 'Forum Engine - 多智能体交流',
-            report: 'Report Agent - 最终报告生成'
+            report: 'Report Agent - 训练报告生成'
         };
 
         // 初始化
@@ -958,7 +958,7 @@
         function performSearch() {
             const query = document.getElementById('searchInput').value.trim();
             if (!query) {
-                showMessage('请输入搜索内容', 'error');
+                showMessage('请输入训练问题或数据分析需求', 'error');
                 return;
             }
 
@@ -1017,7 +1017,7 @@
             } else {
                 button.disabled = false;
                 button.innerHTML = '搜索';
-                showMessage(`搜索请求已发送到 ${totalRunning} 个应用，页面将刷新以开始研究`, 'success');
+                showMessage(`训练分析请求已发送到 ${totalRunning} 个应用，页面将刷新以开始分析`, 'success');
             }
         }
 
@@ -1057,7 +1057,7 @@
                 
             } else if (app === 'report') {
                 // 切换到报告模式
-                document.getElementById('embeddedHeader').textContent = 'Report Agent - 最终报告生成';
+                document.getElementById('embeddedHeader').textContent = 'Report Agent - 训练报告生成';
                 
                 // 显示报告容器，隐藏其他内容
                 document.getElementById('reportContainer').classList.add('active');
@@ -1257,7 +1257,7 @@
             
             // 如果是Report Engine，显示报告界面
             if (app === 'report') {
-                header.textContent = 'Report Agent - 最终报告生成';
+                header.textContent = 'Report Agent - 训练报告生成';
                 
                 // 隐藏所有iframe
                 if (typeof preloadedIframes !== 'undefined') {
@@ -1598,7 +1598,7 @@
                 if (data.success && data.engines_ready) {
                     // 文件准备就绪，解锁按钮
                     reportButton.classList.remove('locked');
-                    reportButton.title = 'Report Engine - 智能报告生成\n所有引擎都有新文件，可以生成报告';
+                    reportButton.title = 'Report Engine - 训练报告生成\n所有引擎都有新文件，可以生成报告';
                     
                     // 检查是否已经有报告在显示
                     const reportPreview = document.getElementById('reportPreview');
@@ -1876,7 +1876,7 @@
                 <!-- 报告预览区域 -->
                 <div class="report-preview" id="reportPreview">
                     <div class="report-loading">
-                        点击"生成最终报告"开始生成综合分析报告
+                        等待生成训练分析报告
                     </div>
                 </div>
             `;
@@ -1964,7 +1964,7 @@
 
         // 生成报告
         function generateReport() {
-            const query = document.getElementById('searchInput').value.trim() || '智能舆情分析报告';
+            const query = document.getElementById('searchInput').value.trim() || '训练数据综合分析报告';
             
             // 重置日志计数器，因为后台会清空日志文件
             reportLogLineCount = 0;
