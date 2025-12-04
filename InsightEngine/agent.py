@@ -442,8 +442,8 @@ class DeepSearchAgent:
                 max_results = len(search_response.results)  # 不限制，传递所有结果
             for result in search_response.results[:max_results]:
                 # 构建训练记录描述
-                distance_km = f"{result.distance_meters/1000:.2f}km" if result.distance_meters else "未知距离"
-                duration_min = f"{result.duration_seconds//60}分{result.duration_seconds%60}秒"
+                distance_km = f"{float(result.distance_meters)/1000:.2f}km" if result.distance_meters else "未知距离"
+                duration_min = f"{int(result.duration_seconds)//60}分{int(result.duration_seconds)%60}秒"
                 pace_str = f"{int(result.pace_per_km//60)}'{int(result.pace_per_km%60):02d}\"/km" if result.pace_per_km else "未知配速"
 
                 title = f"[{result.exercise_type}] {result.start_time.strftime('%Y-%m-%d %H:%M')} - {distance_km}"
@@ -626,8 +626,8 @@ class DeepSearchAgent:
                     max_results = len(search_response.results)  # 不限制，传递所有结果
                 for result in search_response.results[:max_results]:
                     # 构建训练记录描述
-                    distance_km = f"{result.distance_meters/1000:.2f}km" if result.distance_meters else "未知距离"
-                    duration_min = f"{result.duration_seconds//60}分{result.duration_seconds%60}秒"
+                    distance_km = f"{float(result.distance_meters)/1000:.2f}km" if result.distance_meters else "未知距离"
+                    duration_min = f"{int(result.duration_seconds)//60}分{int(result.duration_seconds)%60}秒"
                     pace_str = f"{int(result.pace_per_km//60)}'{int(result.pace_per_km%60):02d}\"/km" if result.pace_per_km else "未知配速"
 
                     title = f"[{result.exercise_type}] {result.start_time.strftime('%Y-%m-%d %H:%M')} - {distance_km}"

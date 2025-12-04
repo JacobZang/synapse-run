@@ -219,7 +219,7 @@ class TrainingDataImporter:
 def main():
     """主函数"""
     # Excel文件路径
-    excel_path = project_root / "406099.xlsx"
+    excel_path = "/home/dzs-ai-4/dzs-dev/Agent/multiRunningAgents/data/406099.xlsx"
 
     # 检查文件是否存在
     if not excel_path.exists():

@@ -395,6 +395,8 @@ SENTIMENT_CONFIG = {
 
 系统集成了多种情感分析方法，可根据需求选择：
 
+http://localhost:5000
+
 #### 1. 多语言情感分析
 
 ```bash
