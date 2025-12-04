@@ -109,7 +109,9 @@ class TrainingDataDB:
         """计算配速(秒/公里)"""
         if not distance_meters or distance_meters <= 0:
             return None
-        return duration_seconds / (distance_meters / 1000.0)
+        # 将distance_meters转换为float以处理Decimal类型
+        distance_km = float(distance_meters) / 1000.0
+        return duration_seconds / distance_km
 
     def _row_to_record(self, row: Dict[str, Any]) -> TrainingRecord:
         """将数据库行转换为TrainingRecord对象"""

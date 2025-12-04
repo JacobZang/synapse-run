@@ -29,23 +29,41 @@ class DeepSearchAgent:
     def __init__(self, config: Optional[Config] = None):
         """
         初始化Deep Search Agent
-        
+
         Args:
             config: 配置对象，如果不提供则自动加载
         """
         # 加载配置
         self.config = config or load_config()
-        
+
         # 初始化LLM客户端
         self.llm_client = self._initialize_llm()
-        
-        # 设置数据库环境变量
-        os.environ["DB_HOST"] = self.config.db_host or ""
-        os.environ["DB_USER"] = self.config.db_user or ""
-        os.environ["DB_PASSWORD"] = self.config.db_password or ""
-        os.environ["DB_NAME"] = self.config.db_name or ""
-        os.environ["DB_PORT"] = str(self.config.db_port)
-        os.environ["DB_CHARSET"] = self.config.db_charset
+
+        # 从根目录config.py读取数据库配置并设置环境变量
+        # 注意: 这里优先使用self.config中的配置,如果为空则从根目录config.py读取
+        import sys
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if project_root not in sys.path:
+            sys.path.insert(0, project_root)
+
+        try:
+            import config as root_config
+            # 优先使用InsightEngine配置,如果为空则使用根配置
+            os.environ["DB_HOST"] = self.config.db_host or getattr(root_config, "DB_HOST", "localhost")
+            os.environ["DB_USER"] = self.config.db_user or getattr(root_config, "DB_USER", "")
+            os.environ["DB_PASSWORD"] = self.config.db_password or getattr(root_config, "DB_PASSWORD", "")
+            os.environ["DB_NAME"] = self.config.db_name or getattr(root_config, "DB_NAME", "")
+            os.environ["DB_PORT"] = str(self.config.db_port if self.config.db_port != 3306 else getattr(root_config, "DB_PORT", 3306))
+            os.environ["DB_CHARSET"] = self.config.db_charset or getattr(root_config, "DB_CHARSET", "utf8mb4")
+        except ImportError:
+            # 如果无法导入根配置,则使用self.config中的配置
+            print("警告: 无法从根目录加载config.py,使用InsightEngine配置")
+            os.environ["DB_HOST"] = self.config.db_host or ""
+            os.environ["DB_USER"] = self.config.db_user or ""
+            os.environ["DB_PASSWORD"] = self.config.db_password or ""
+            os.environ["DB_NAME"] = self.config.db_name or ""
+            os.environ["DB_PORT"] = str(self.config.db_port)
+            os.environ["DB_CHARSET"] = self.config.db_charset
         
         # 初始化搜索工具集
         self.search_agency = TrainingDataDB()
@@ -423,17 +441,34 @@ class DeepSearchAgent:
             else:
                 max_results = len(search_response.results)  # 不限制，传递所有结果
             for result in search_response.results[:max_results]:
+                # 构建训练记录描述
+                distance_km = f"{result.distance_meters/1000:.2f}km" if result.distance_meters else "未知距离"
+                duration_min = f"{result.duration_seconds//60}分{result.duration_seconds%60}秒"
+                pace_str = f"{int(result.pace_per_km//60)}'{int(result.pace_per_km%60):02d}\"/km" if result.pace_per_km else "未知配速"
+
+                title = f"[{result.exercise_type}] {result.start_time.strftime('%Y-%m-%d %H:%M')} - {distance_km}"
+                content = (
+                    f"运动类型: {result.exercise_type}\n"
+                    f"开始时间: {result.start_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    f"持续时间: {duration_min}\n"
+                    f"距离: {distance_km}\n"
+                    f"配速: {pace_str}\n"
+                    f"平均心率: {result.avg_heart_rate or '未知'}bpm\n"
+                    f"最大心率: {result.max_heart_rate or '未知'}bpm\n"
+                    f"卡路里: {result.calories or '未知'}kcal"
+                )
+
                 search_results.append({
-                    'title': result.title_or_content,
-                    'url': result.url or "",
-                    'content': result.title_or_content,
-                    'score': result.hotness_score,
-                    'raw_content': result.title_or_content,
-                    'published_date': result.publish_time.isoformat() if result.publish_time else None,
-                    'platform': result.platform,
-                    'content_type': result.content_type,
-                    'author': result.author_nickname,
-                    'engagement': result.engagement
+                    'title': title,
+                    'url': "",
+                    'content': content,
+                    'score': result.avg_heart_rate or 0,  # 使用心率作为评分
+                    'raw_content': content,
+                    'published_date': result.start_time.isoformat(),
+                    'platform': "训练记录数据库",
+                    'content_type': result.exercise_type,
+                    'author': result.user_id,
+                    'engagement': result.calories or 0
                 })
         
         if search_results:
@@ -590,17 +625,34 @@ class DeepSearchAgent:
                 else:
                     max_results = len(search_response.results)  # 不限制，传递所有结果
                 for result in search_response.results[:max_results]:
+                    # 构建训练记录描述
+                    distance_km = f"{result.distance_meters/1000:.2f}km" if result.distance_meters else "未知距离"
+                    duration_min = f"{result.duration_seconds//60}分{result.duration_seconds%60}秒"
+                    pace_str = f"{int(result.pace_per_km//60)}'{int(result.pace_per_km%60):02d}\"/km" if result.pace_per_km else "未知配速"
+
+                    title = f"[{result.exercise_type}] {result.start_time.strftime('%Y-%m-%d %H:%M')} - {distance_km}"
+                    content = (
+                        f"运动类型: {result.exercise_type}\n"
+                        f"开始时间: {result.start_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+                        f"持续时间: {duration_min}\n"
+                        f"距离: {distance_km}\n"
+                        f"配速: {pace_str}\n"
+                        f"平均心率: {result.avg_heart_rate or '未知'}bpm\n"
+                        f"最大心率: {result.max_heart_rate or '未知'}bpm\n"
+                        f"卡路里: {result.calories or '未知'}kcal"
+                    )
+
                     search_results.append({
-                        'title': result.title_or_content,
-                        'url': result.url or "",
-                        'content': result.title_or_content,
-                        'score': result.hotness_score,
-                        'raw_content': result.title_or_content,
-                        'published_date': result.publish_time.isoformat() if result.publish_time else None,
-                        'platform': result.platform,
-                        'content_type': result.content_type,
-                        'author': result.author_nickname,
-                        'engagement': result.engagement
+                        'title': title,
+                        'url': "",
+                        'content': content,
+                        'score': result.avg_heart_rate or 0,  # 使用心率作为评分
+                        'raw_content': content,
+                        'published_date': result.start_time.isoformat(),
+                        'platform': "训练记录数据库",
+                        'content_type': result.exercise_type,
+                        'author': result.user_id,
+                        'engagement': result.calories or 0
                     })
             
             if search_results:

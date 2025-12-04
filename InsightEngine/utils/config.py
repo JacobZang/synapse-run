@@ -143,20 +143,60 @@ class Config:
 def load_config(config_file: Optional[str] = None) -> Config:
     """
     Load configuration.
+    优先级: 指定的config_file > InsightEngine目录下的配置 > 根目录的config.py
     """
+    import sys
+
+    # 如果指定了配置文件
     if config_file:
         if not os.path.exists(config_file):
             raise FileNotFoundError(f"配置文件不存在: {config_file}")
         file_to_load = config_file
     else:
+        # 尝试在当前目录查找配置文件
+        file_to_load = None
         for candidate in ("config.py", "config.env", ".env"):
             if os.path.exists(candidate):
                 file_to_load = candidate
-                print(f"已找到配置文件: {candidate}")
+                print(f"已找到InsightEngine配置文件: {candidate}")
                 break
-        else:
-            raise FileNotFoundError("未找到配置文件，请创建 config.py。")
 
+        # 如果当前目录没有,尝试从根目录加载
+        if not file_to_load:
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            root_config_path = os.path.join(project_root, "config.py")
+
+            if os.path.exists(root_config_path):
+                print(f"从根目录加载配置: {root_config_path}")
+                if project_root not in sys.path:
+                    sys.path.insert(0, project_root)
+
+                try:
+                    import config as root_config
+
+                    # 从根配置创建Config对象
+                    config = Config(
+                        llm_api_key=getattr(root_config, "INSIGHT_ENGINE_API_KEY", None),
+                        llm_base_url=getattr(root_config, "INSIGHT_ENGINE_BASE_URL", None),
+                        llm_model_name=getattr(root_config, "INSIGHT_ENGINE_MODEL_NAME", None),
+                        db_host=getattr(root_config, "DB_HOST", None),
+                        db_user=getattr(root_config, "DB_USER", None),
+                        db_password=getattr(root_config, "DB_PASSWORD", None),
+                        db_name=getattr(root_config, "DB_NAME", None),
+                        db_port=int(getattr(root_config, "DB_PORT", 3306)),
+                        db_charset=getattr(root_config, "DB_CHARSET", "utf8mb4"),
+                    )
+
+                    if not config.validate():
+                        raise ValueError("配置校验失败，请检查根目录 config.py 中的相关配置。")
+
+                    return config
+                except ImportError as e:
+                    raise FileNotFoundError(f"无法导入根目录config.py: {e}")
+            else:
+                raise FileNotFoundError("未找到配置文件，请在InsightEngine目录或根目录创建 config.py。")
+
+    # 从指定文件加载配置
     config = Config.from_file(file_to_load)
 
     if not config.validate():
