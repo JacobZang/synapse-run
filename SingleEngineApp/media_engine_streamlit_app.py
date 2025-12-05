@@ -1,6 +1,7 @@
 """
 Streamlit Web界面
-为Media Agent提供友好的Web界面
+为后勤与情报官Agent提供友好的Web界面
+专注于收集比赛报名、天气预报、装备价格等实用情报
 """
 
 import os
@@ -26,7 +27,7 @@ except locale.Error:
 # 添加src目录到Python路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from MediaEngine import DeepSearchAgent, Config
+from MediaEngine import LogisticsIntelligenceAgent, Config
 from config import (
     MEDIA_ENGINE_API_KEY,
     MEDIA_ENGINE_BASE_URL,
@@ -38,8 +39,8 @@ from config import (
 def main():
     """主函数"""
     st.set_page_config(
-        page_title="Media Agent - 多模态分析专家",
-        page_icon="🎬",
+        page_title="后勤与情报官 - 跑步训练情报收集",
+        page_icon="🏃",
         layout="wide"
     )
 
@@ -179,8 +180,8 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<h1 class="main-title">Media Agent</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">多模态分析专家 | 视频内容解析 | 结构化信息提取</p>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title">后勤与情报官 🏃</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">跑步训练情报收集 | 比赛报名 | 天气预报 | 装备价格 | 路线坡度</p>', unsafe_allow_html=True)
 
     # 检查URL参数
     try:
@@ -260,15 +261,15 @@ def main():
 
 
 def execute_research(query: str, config: Config):
-    """执行多模态智能分析"""
+    """执行情报收集与分析"""
     try:
         # 创建进度条
         progress_bar = st.progress(0)
         status_text = st.empty()
 
         # 初始化Agent
-        status_text.markdown("**正在初始化多模态分析引擎...**")
-        agent = DeepSearchAgent(config)
+        status_text.markdown("**正在初始化后勤与情报官...**")
+        agent = LogisticsIntelligenceAgent(config)
         st.session_state.agent = agent
 
         progress_bar.progress(10)
@@ -296,28 +297,28 @@ def execute_research(query: str, config: Config):
             progress_bar.progress(int(progress_value))
 
         # 生成最终报告
-        status_text.markdown("**正在生成多模态分析报告...**")
+        status_text.markdown("**正在生成情报分析报告...**")
         final_report = agent._generate_final_report()
         progress_bar.progress(90)
 
         # 保存报告
-        status_text.markdown("**正在保存分析结果...**")
+        status_text.markdown("**正在保存情报收集结果...**")
         agent._save_report(final_report)
         progress_bar.progress(100)
 
-        status_text.markdown("**多模态分析完成!**")
+        status_text.markdown("**情报收集完成!**")
 
         # 显示结果
         display_results(agent, final_report)
 
     except Exception as e:
-        st.error(f"多模态分析过程中发生错误: {str(e)}")
+        st.error(f"情报收集过程中发生错误: {str(e)}")
 
 
-def display_results(agent: DeepSearchAgent, final_report: str):
-    """显示多模态分析结果"""
+def display_results(agent: 'LogisticsIntelligenceAgent', final_report: str):
+    """显示情报收集结果"""
     st.markdown("---")
-    st.markdown("## 多模态分析结果")
+    st.markdown("## 情报收集结果")
 
     # 结果标签页
     tab1, tab2 = st.tabs(["分析报告", "内容来源"])

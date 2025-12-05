@@ -37,9 +37,9 @@
    - 工具: Tavily API (新闻搜索、网页搜索等)
    - 核心能力: 互联网跑步训练资源检索、专业文献查找
 
-2. **Media Agent** (`MediaEngine/`): 多模态内容分析
-   - 工具: 视频分析、图像OCR、结构化信息提取
-   - 核心能力: 训练视频理解、数据卡片解析
+2. **后勤与情报官** (`MediaEngine/`): 跑步训练情报收集专家
+   - 工具: 博查网页搜索、结构化数据卡片(天气、价格、百科等)
+   - 核心能力: 比赛报名、天气预报、装备价格、路线坡度等实用情报收集
 
 3. **Insight Agent** (`InsightEngine/`): 训练数据深度挖掘
    - 工具: 训练数据库查询工具
@@ -63,7 +63,7 @@
 | 步骤 | 阶段名称 | 主要操作 | 参与组件 | 循环特性 |
 |------|----------|----------|----------|----------|
 | 1 | 用户提问 | Flask主应用接收训练问题 | Flask主应用 | - |
-| 2 | 并行启动 | 三个Agent同时开始工作 | Query Agent、Media Agent、Insight Agent | - |
+| 2 | 并行启动 | 三个Agent同时开始工作 | Query Agent、后勤与情报官、Insight Agent | - |
 | 3 | 初步分析 | 各Agent使用专属工具进行概览搜索 | 各Agent + 专属工具集 | - |
 | 4 | 策略制定 | 基于初步结果制定分块研究策略 | 各Agent内部决策模块 | - |
 | 5-N | **循环阶段** | **论坛协作 + 深度研究** | **ForumEngine + 所有Agent** | **多轮循环** |
@@ -145,7 +145,7 @@ INSIGHT_ENGINE_API_KEY = "your_api_key"
 INSIGHT_ENGINE_BASE_URL = "https://api.moonshot.cn/v1"
 INSIGHT_ENGINE_MODEL_NAME = "kimi-k2-0711-preview"
 
-# Media Agent
+# 后勤与情报官
 MEDIA_ENGINE_API_KEY = "your_api_key"
 MEDIA_ENGINE_BASE_URL = "https://api.example.com/v1"
 MEDIA_ENGINE_MODEL_NAME = "your_model_name"
@@ -280,7 +280,7 @@ Synapse_Run/
 │   ├── nodes/                     # 处理节点
 │   ├── tools/                     # 搜索工具
 │   └── utils/                     # 工具函数
-├── MediaEngine/                   # 多模态内容分析Agent
+├── MediaEngine/                   # 后勤与情报官Agent(情报收集)
 │   ├── agent.py                   # Agent主逻辑
 │   ├── nodes/                     # 处理节点
 │   ├── llms/                      # LLM接口

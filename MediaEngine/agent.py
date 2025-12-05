@@ -1,6 +1,7 @@
 """
-Deep Search Agent主类
-整合所有模块，实现完整的深度搜索流程
+后勤与情报官 Agent主类
+专注于收集比赛报名、天气预报、装备价格、路线坡度等实用情报
+整合所有模块，实现完整的情报收集流程
 """
 
 import json
@@ -23,13 +24,13 @@ from .tools import BochaMultimodalSearch, BochaResponse
 from .utils import Config, load_config, format_search_results_for_prompt
 
 
-class DeepSearchAgent:
-    """Deep Search Agent主类"""
-    
+class LogisticsIntelligenceAgent:
+    """后勤与情报官Agent主类 (原DeepSearchAgent)"""
+
     def __init__(self, config: Optional[Config] = None):
         """
-        初始化Deep Search Agent
-        
+        初始化后勤与情报官Agent
+
         Args:
             config: 配置对象，如果不提供则自动加载
         """
@@ -53,9 +54,9 @@ class DeepSearchAgent:
         # 确保输出目录存在
         os.makedirs(self.config.output_dir, exist_ok=True)
         
-        print(f"Meida Agent已初始化")
+        print(f"后勤与情报官Agent已初始化")
         print(f"使用LLM: {self.llm_client.get_model_info()}")
-        print(f"搜索工具集: BochaMultimodalSearch (支持5种多模态搜索工具)")
+        print(f"情报搜索工具集: BochaMultimodalSearch (支持5种情报搜索工具)")
     
     def _initialize_llm(self) -> LLMClient:
         """初始化LLM客户端"""
@@ -394,7 +395,7 @@ class DeepSearchAgent:
         query_safe = "".join(c for c in self.state.query if c.isalnum() or c in (' ', '-', '_')).rstrip()
         query_safe = query_safe.replace(' ', '_')[:30]
         
-        filename = f"deep_search_report_{query_safe}_{timestamp}.md"
+        filename = f"intelligence_report_{query_safe}_{timestamp}.md"
         filepath = os.path.join(self.config.output_dir, filename)
         
         # 保存报告
@@ -425,15 +426,15 @@ class DeepSearchAgent:
         print(f"状态已保存到 {filepath}")
 
 
-def create_agent(config_file: Optional[str] = None) -> DeepSearchAgent:
+def create_agent(config_file: Optional[str] = None) -> 'LogisticsIntelligenceAgent':
     """
-    创建Deep Search Agent实例的便捷函数
-    
+    创建后勤与情报官Agent实例的便捷函数
+
     Args:
         config_file: 配置文件路径
-        
+
     Returns:
-        DeepSearchAgent实例
+        LogisticsIntelligenceAgent实例
     """
     config = load_config(config_file)
-    return DeepSearchAgent(config)
+    return LogisticsIntelligenceAgent(config)

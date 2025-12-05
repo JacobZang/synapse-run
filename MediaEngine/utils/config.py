@@ -1,5 +1,5 @@
 """
-Configuration management module for the Media Engine.
+Configuration management module for the Logistics Intelligence Agent (后勤与情报官).
 """
 
 import os
@@ -28,7 +28,7 @@ def _get_value(source, key: str, default=None, *fallback_keys: str):
 
 @dataclass
 class Config:
-    """Media Engine configuration."""
+    """后勤与情报官Agent配置 (Logistics Intelligence Agent configuration)."""
 
     llm_api_key: Optional[str] = None
     llm_base_url: Optional[str] = None
