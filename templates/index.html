@@ -304,8 +304,7 @@
             flex: 1;
             padding: 16px;
             background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
+            /* 移除动画相关属性,保留静态渐变颜色 */
             color: #e0f2ff;  /* 更亮的浅蓝色，确保清晰可读 */
             text-shadow: 0 0 8px rgba(224, 242, 255, 0.4), 0 0 15px rgba(96, 165, 250, 0.2);
             font-family: var(--font-mono);
@@ -328,7 +327,7 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* 终端扫描线特效 */
+        /* 终端扫描线特效(已禁用动画,保留静态效果) */
         .console-output::before {
             content: '';
             position: absolute;
@@ -344,7 +343,7 @@
             pointer-events: none;
             z-index: 10;
             opacity: 0.6;
-            animation: scanline 8s linear infinite;
+            /* 移除 animation: scanline 8s linear infinite; */
         }
 
         /* 扫描线动画 */
@@ -353,7 +352,7 @@
             100% { transform: translateY(100%); }
         }
 
-        /* 终端光晕效果 */
+        /* 终端光晕效果(已禁用动画) */
         .console-output::after {
             content: '';
             position: absolute;
@@ -366,10 +365,10 @@
                 rgba(0, 212, 255, 0.1),
                 transparent);
             border-radius: 8px;
-            opacity: 0;
+            opacity: 0.15;  /* 设置为静态半透明状态 */
             pointer-events: none;
             z-index: 5;
-            animation: pulse 3s ease-in-out infinite;
+            /* 移除 animation: pulse 3s ease-in-out infinite; */
         }
 
         @keyframes pulse {
