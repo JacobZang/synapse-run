@@ -717,7 +717,7 @@
             border-color: #608ab1;
         }
 
-        .forum-message.agent:has(.forum-message-header:contains("Insight Engine")) {
+        .forum-message.agent:has(.forum-message-header:contains("Sports Scientist")) {
             background-color: #f2ebf3;
             border-color: #8e6a9f;
         }
@@ -1078,7 +1078,7 @@
                 <div class="app-switcher">
                     <button class="app-button active" data-app="insight">
                         <span class="status-indicator" id="status-insight"></span>
-                        Insight Engine
+                        Sports Scientist
                     </button>
                     <button class="app-button" data-app="media">
                         <span class="status-indicator" id="status-media"></span>
@@ -1130,8 +1130,8 @@
 
         // 应用名称映射
         const appNames = {
-            insight: 'Insight Engine',
-            media: '后勤与情报官', 
+            insight: 'Sports Scientist',
+            media: '后勤与情报官',
             query: 'Query Engine',
             forum: 'Forum Engine',
             report: 'Report Engine'
@@ -1139,7 +1139,7 @@
 
         // 页面头部显示的完整Agent介绍
         const agentTitles = {
-            insight: 'Insight Agent - 训练数据深度挖掘',
+            insight: 'Sports Scientist (运动科学家) - 生理数据量化分析·循证训练建议',
             media: '后勤与情报官 - 比赛报名·天气预报·装备价格·路线坡度',
             query: 'Query Agent - 专业知识搜索',
             forum: 'Forum Engine - 多智能体交流',
@@ -2006,7 +2006,7 @@
                 
                 switch(source.toUpperCase()) {
                     case 'INSIGHT':
-                        displayName = 'Insight Engine';
+                        displayName = 'Sports Scientist';
                         break;
                     case 'MEDIA':
                         displayName = '后勤与情报官';

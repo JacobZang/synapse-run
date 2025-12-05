@@ -1,6 +1,7 @@
 """
 Streamlit Web界面
-为Insight Agent提供友好的Web界面
+为Sports Scientist Agent (运动科学家)提供友好的Web界面
+基于训练数据的科学分析系统
 """
 
 import os
@@ -43,8 +44,8 @@ from config import (
 def main():
     """主函数"""
     st.set_page_config(
-        page_title="Insight Agent - 数据洞察专家",
-        page_icon="📊",
+        page_title="Sports Scientist - 运动科学家",
+        page_icon="🔬",
         layout="wide"
     )
 
@@ -184,8 +185,8 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<h1 class="main-title">Insight Agent</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">数据洞察专家 | 训练数据深度分析 | 专业训练建议</p>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title">Sports Scientist</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">运动科学家 | 生理数据量化分析 | 循证训练建议</p>', unsafe_allow_html=True)
 
     # 检查URL参数
     try:
@@ -209,7 +210,7 @@ def main():
     # 简化的研究查询展示区域
     
     # 如果有自动查询，使用它作为默认值，否则显示占位符
-    display_query = auto_query if auto_query else "等待接收训练分析查询...\n\n示例查询:\n- 分析我最近的训练状态和进步趋势\n- 我的配速稳定性如何\n- 最近一个月的训练强度分析"
+    display_query = auto_query if auto_query else "等待接收训练数据分析查询...\n\n示例查询:\n- 检测最近一周的平均心率比基准值高出多少\n- 量化分析我的配速稳定性和训练密度\n- 基于生理数据评估最近的训练负荷"
     
     # 只读的查询展示区域
     st.text_area(
@@ -271,43 +272,43 @@ def main():
 
 
 def execute_research(query: str, config: Config):
-    """执行训练数据深度分析"""
+    """执行训练数据科学分析"""
     try:
         # 创建进度条
         progress_bar = st.progress(0)
         status_text = st.empty()
 
-        # 初始化Agent
-        status_text.markdown("**正在初始化数据分析引擎...**")
-        agent = DeepSearchAgent(config)
+        # 初始化Sports Scientist Agent
+        status_text.markdown("**正在初始化运动科学分析引擎...**")
+        agent = DeepSearchAgent(config)  # DeepSearchAgent是向后兼容的别名,实际为SportsScientistAgent
         st.session_state.agent = agent
 
         progress_bar.progress(10)
 
         # 生成报告结构
-        status_text.markdown("**正在构建分析框架...**")
+        status_text.markdown("**正在构建科学分析框架...**")
         agent._generate_report_structure(query)
         progress_bar.progress(20)
 
-        # 处理段落
+        # 处理数据分析模块
         total_paragraphs = len(agent.state.paragraphs)
         for i in range(total_paragraphs):
-            status_text.markdown(f"**分析进度 {i + 1}/{total_paragraphs}:** {agent.state.paragraphs[i].title}")
+            status_text.markdown(f"**量化分析 {i + 1}/{total_paragraphs}:** {agent.state.paragraphs[i].title}")
 
-            # 初始搜索和总结
+            # 数据查询和量化分析
             agent._initial_search_and_summary(i)
             progress_value = 20 + (i + 0.5) / total_paragraphs * 60
             progress_bar.progress(int(progress_value))
 
-            # 反思循环
+            # 数据验证循环
             agent._reflection_loop(i)
             agent.state.paragraphs[i].research.mark_completed()
 
             progress_value = 20 + (i + 1) / total_paragraphs * 60
             progress_bar.progress(int(progress_value))
 
-        # 生成最终报告
-        status_text.markdown("**正在生成训练分析报告...**")
+        # 生成科学分析报告
+        status_text.markdown("**正在生成科学分析报告...**")
         final_report = agent._generate_final_report()
         progress_bar.progress(90)
 
@@ -316,19 +317,19 @@ def execute_research(query: str, config: Config):
         agent._save_report(final_report)
         progress_bar.progress(100)
 
-        status_text.markdown("**训练数据分析完成!**")
+        status_text.markdown("**生理数据分析完成!**")
 
         # 显示结果
         display_results(agent, final_report)
 
     except Exception as e:
-        st.error(f"训练数据分析过程中发生错误: {str(e)}")
+        st.error(f"生理数据分析过程中发生错误: {str(e)}")
 
 
 def display_results(agent: DeepSearchAgent, final_report: str):
-    """显示训练数据分析结果"""
+    """显示科学分析结果"""
     st.markdown("---")
-    st.markdown("## 训练数据分析结果")
+    st.markdown("## 科学分析报告")
 
     # 结果标签页
     tab1, tab2 = st.tabs(["分析报告", "数据来源"])
@@ -337,32 +338,32 @@ def display_results(agent: DeepSearchAgent, final_report: str):
         st.markdown(final_report)
 
     with tab2:
-        # 段落详情
-        st.subheader("段落详情")
+        # 数据模块详情
+        st.subheader("数据分析模块详情")
         for i, paragraph in enumerate(agent.state.paragraphs):
-            with st.expander(f"段落 {i + 1}: {paragraph.title}"):
-                st.write("**预期内容:**", paragraph.content)
-                st.write("**最终内容:**", paragraph.research.latest_summary[:300] + "..."
+            with st.expander(f"模块 {i + 1}: {paragraph.title}"):
+                st.write("**分析目标:**", paragraph.content)
+                st.write("**科学分析结果:**", paragraph.research.latest_summary[:300] + "..."
                 if len(paragraph.research.latest_summary) > 300
                 else paragraph.research.latest_summary)
-                st.write("**搜索次数:**", paragraph.research.get_search_count())
-                st.write("**反思次数:**", paragraph.research.reflection_iteration)
+                st.write("**数据查询次数:**", paragraph.research.get_search_count())
+                st.write("**验证迭代次数:**", paragraph.research.reflection_iteration)
 
-        # 搜索历史
-        st.subheader("搜索历史")
+        # 数据查询历史
+        st.subheader("训练数据查询历史")
         all_searches = []
         for paragraph in agent.state.paragraphs:
             all_searches.extend(paragraph.research.search_history)
 
         if all_searches:
             for i, search in enumerate(all_searches):
-                with st.expander(f"搜索 {i + 1}: {search.query}"):
-                    st.write("**URL:**", search.url)
+                with st.expander(f"查询 {i + 1}: {search.query}"):
+                    st.write("**数据源:**", search.platform or "训练记录数据库")
                     st.write("**标题:**", search.title)
-                    st.write("**内容预览:**",
+                    st.write("**数据预览:**",
                              search.content[:200] + "..." if len(search.content) > 200 else search.content)
                     if search.score:
-                        st.write("**相关度评分:**", search.score)
+                        st.write("**量化指标:**", search.score)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 """
-Deep Search Agent主类
-整合所有模块，实现完整的深度搜索流程
+Sports Scientist Agent (运动科学家Agent)主类
+基于训练数据库进行科学分析,提供数据驱动的训练建议
+人设:理性、严谨、只相信数据,略显极客
 """
 
 import json
@@ -23,12 +24,17 @@ from .tools import TrainingDataDB, DBResponse
 from .utils import Config, load_config, format_search_results_for_prompt
 
 
-class DeepSearchAgent:
-    """Deep Search Agent主类"""
-    
+class SportsScientistAgent:
+    """
+    Sports Scientist Agent (运动科学家Agent)
+
+    基于生理数据和训练记录,提供严谨的科学分析和循证建议
+    核心能力:访问本地训练日志,分析心率、配速、距离、训练负荷等基础指标
+    """
+
     def __init__(self, config: Optional[Config] = None):
         """
-        初始化Deep Search Agent
+        初始化Sports Scientist Agent
 
         Args:
             config: 配置对象，如果不提供则自动加载
@@ -77,9 +83,10 @@ class DeepSearchAgent:
         # 确保输出目录存在
         os.makedirs(self.config.output_dir, exist_ok=True)
 
-        print(f"Insight Agent已初始化")
+        print(f"Sports Scientist Agent (运动科学家) 已初始化")
         print(f"使用LLM: {self.llm_client.get_model_info()}")
-        print(f"搜索工具集: TrainingDataDB (支持6种训练数据查询工具)")
+        print(f"数据源: TrainingDataDB (支持6种训练数据查询工具)")
+        print(f"分析能力: 心率、配速、距离、时长等基础生理指标量化分析")
     
     def _initialize_llm(self) -> LLMClient:
         """初始化LLM客户端"""
@@ -246,17 +253,18 @@ class DeepSearchAgent:
     
     def research(self, query: str, save_report: bool = True) -> str:
         """
-        执行深度研究
-        
+        执行训练数据科学分析
+
         Args:
-            query: 研究查询
-            save_report: 是否保存报告到文件
-            
+            query: 分析查询 (例如: "分析我最近的训练状态和进步趋势")
+            save_report: 是否保存分析报告到文件
+
         Returns:
-            最终报告内容
+            最终分析报告内容 (基于科学数据的训练建议)
         """
         print(f"\n{'='*60}")
-        print(f"开始深度研究: {query}")
+        print(f"Sports Scientist: 开始训练数据分析")
+        print(f"分析目标: {query}")
         print(f"{'='*60}")
         
         try:
@@ -274,35 +282,35 @@ class DeepSearchAgent:
                 self._save_report(final_report)
             
             print(f"\n{'='*60}")
-            print("深度研究完成！")
+            print("Sports Scientist: 训练数据分析完成")
             print(f"{'='*60}")
-            
+
             return final_report
-            
+
         except Exception as e:
-            print(f"研究过程中发生错误: {str(e)}")
+            print(f"Sports Scientist: 分析过程中发生错误: {str(e)}")
             raise e
     
     def _generate_report_structure(self, query: str):
-        """生成报告结构"""
-        print(f"\n[步骤 1] 生成报告结构...")
+        """生成训练分析报告结构"""
+        print(f"\n[步骤 1] 构建科学分析框架...")
         
         # 创建报告结构节点
         report_structure_node = ReportStructureNode(self.llm_client, query)
         
         # 生成结构并更新状态
         self.state = report_structure_node.mutate_state(state=self.state)
-        
-        print(f"报告结构已生成，共 {len(self.state.paragraphs)} 个段落:")
+
+        print(f"分析框架已生成，共 {len(self.state.paragraphs)} 个数据模块:")
         for i, paragraph in enumerate(self.state.paragraphs, 1):
             print(f"  {i}. {paragraph.title}")
     
     def _process_paragraphs(self):
-        """处理所有段落"""
+        """处理所有数据分析模块"""
         total_paragraphs = len(self.state.paragraphs)
-        
+
         for i in range(total_paragraphs):
-            print(f"\n[步骤 2.{i+1}] 处理段落: {self.state.paragraphs[i].title}")
+            print(f"\n[步骤 2.{i+1}] 数据模块分析: {self.state.paragraphs[i].title}")
             print("-" * 50)
             
             # 初始搜索和总结
@@ -311,35 +319,35 @@ class DeepSearchAgent:
             # 反思循环
             self._reflection_loop(i)
             
-            # 标记段落完成
+            # 标记模块完成
             self.state.paragraphs[i].research.mark_completed()
-            
+
             progress = (i + 1) / total_paragraphs * 100
-            print(f"段落处理完成 ({progress:.1f}%)")
+            print(f"数据模块分析完成 ({progress:.1f}%)")
     
     def _initial_search_and_summary(self, paragraph_index: int):
-        """执行初始搜索和总结"""
+        """执行初始数据查询和量化分析"""
         paragraph = self.state.paragraphs[paragraph_index]
-        
+
         # 准备搜索输入
         search_input = {
             "title": paragraph.title,
             "content": paragraph.content
         }
-        
-        # 生成搜索查询和工具选择
-        print("  - 生成搜索查询...")
+
+        # 生成数据查询和工具选择
+        print("  - 生成数据查询策略...")
         search_output = self.first_search_node.run(search_input)
         search_query = search_output["search_query"]
         search_tool = search_output.get("search_tool", "search_recent_trainings")  # 默认工具
         reasoning = search_output["reasoning"]
-        
-        print(f"  - 搜索查询: {search_query}")
-        print(f"  - 选择的工具: {search_tool}")
-        print(f"  - 推理: {reasoning}")
-        
-        # 执行搜索
-        print("  - 执行数据库查询...")
+
+        print(f"  - 数据查询: {search_query}")
+        print(f"  - 选择的查询工具: {search_tool}")
+        print(f"  - 科学推理: {reasoning}")
+
+        # 执行数据查询
+        print("  - 从训练数据库提取数据...")
 
         # 处理训练数据工具参数
         search_kwargs = {}
@@ -750,15 +758,18 @@ class DeepSearchAgent:
         print(f"状态已保存到 {filepath}")
 
 
-def create_agent(config_file: Optional[str] = None) -> DeepSearchAgent:
+def create_agent(config_file: Optional[str] = None) -> SportsScientistAgent:
     """
-    创建Deep Search Agent实例的便捷函数
-    
+    创建Sports Scientist Agent实例的便捷函数
+
     Args:
         config_file: 配置文件路径
-        
+
     Returns:
-        DeepSearchAgent实例
+        SportsScientistAgent实例 (运动科学家Agent)
     """
     config = load_config(config_file)
-    return DeepSearchAgent(config)
+    return SportsScientistAgent(config)
+
+# 向后兼容的别名
+DeepSearchAgent = SportsScientistAgent

@@ -1,12 +1,17 @@
 """
-Deep Search Agent
-一个无框架的深度搜索AI代理实现
+Sports Scientist Agent (运动科学家Agent)
+基于训练数据库的科学分析AI代理
+人设:理性、严谨、只相信数据,略显极客
+核心能力:量化分析心率、配速、距离、时长等基础生理指标
 """
 
-from .agent import DeepSearchAgent, create_agent
+from .agent import SportsScientistAgent, create_agent
 from .utils.config import Config, load_config
 
-__version__ = "1.0.0"
-__author__ = "Deep Search Agent Team"
+# 向后兼容的别名
+DeepSearchAgent = SportsScientistAgent
 
-__all__ = ["DeepSearchAgent", "create_agent", "Config", "load_config"]
+__version__ = "2.0.0"
+__author__ = "Sports Scientist Agent Team"
+
+__all__ = ["SportsScientistAgent", "DeepSearchAgent", "create_agent", "Config", "load_config"]
