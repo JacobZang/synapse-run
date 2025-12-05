@@ -26,14 +26,6 @@ except ImportError as e:
     print(f"ReportEngine导入失败: {e}")
     REPORT_ENGINE_AVAILABLE = False
 
-# 导入QRCodeManager
-try:
-    from qrcode_manager import get_qrcode_manager
-    QRCODE_MANAGER_AVAILABLE = True
-except ImportError as e:
-    print(f"QRCodeManager导入失败: {e}")
-    QRCODE_MANAGER_AVAILABLE = False
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Dedicated-to-creating-a-concise-and-versatile-public-opinion-analysis-platform'
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -623,56 +615,6 @@ def get_forum_log():
         })
     except Exception as e:
         return jsonify({'success': False, 'message': f'读取forum.log失败: {str(e)}'})
-
-@app.route('/qrcode/<session_id>')
-def show_qrcode_page(session_id):
-    """展示二维码扫码页面"""
-    print(f"[Flask] 🌐 访问QR页面: /qrcode/{session_id}")
-
-    if not QRCODE_MANAGER_AVAILABLE:
-        print(f"[Flask] ❌ QRCode Manager不可用")
-        return "QRCode Manager不可用", 500
-
-    print(f"[Flask] 📞 调用get_qrcode_manager()...")
-    manager = get_qrcode_manager()
-
-    print(f"[Flask] 🔍 查询session: {session_id}")
-    qrcode_info = manager.get_qrcode(session_id)
-
-    if not qrcode_info:
-        print(f"[Flask] ❌ Session未找到或已过期")
-        return render_template('qrcode_expired.html'), 404
-
-    print(f"[Flask] ✅ Session找到，返回页面")
-    print(f"  - Platform: {qrcode_info['platform']}")
-    print(f"  - Image length: {len(qrcode_info['base64_image'])}")
-
-    return render_template('qrcode_login.html',
-                         session_id=session_id,
-                         platform=qrcode_info['platform'],
-                         qrcode_image=qrcode_info['base64_image'])
-
-@app.route('/api/qrcode/<session_id>/status')
-def check_qrcode_status(session_id):
-    """检查二维码登录状态（供前端轮询）"""
-    if not QRCODE_MANAGER_AVAILABLE:
-        return jsonify({'success': False, 'message': 'QRCode Manager不可用'})
-
-    manager = get_qrcode_manager()
-    qrcode_info = manager.get_qrcode(session_id)
-
-    if not qrcode_info:
-        return jsonify({
-            'success': False,
-            'status': 'expired',
-            'message': '二维码已过期'
-        })
-
-    return jsonify({
-        'success': True,
-        'status': 'success' if qrcode_info['login_success'] else 'waiting',
-        'platform': qrcode_info['platform']
-    })
 
 @app.route('/api/search', methods=['POST'])
 def search():
