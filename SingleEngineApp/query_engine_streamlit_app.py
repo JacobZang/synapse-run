@@ -33,14 +33,129 @@ from config import QUERY_ENGINE_API_KEY, QUERY_ENGINE_BASE_URL, QUERY_ENGINE_MOD
 def main():
     """主函数"""
     st.set_page_config(
-        page_title="Query Agent",
-        page_icon="",
+        page_title="Query Agent - 信息检索专家",
+        page_icon="🔍",
         layout="wide"
     )
 
-    st.title("Query Agent")
-    st.markdown("具备强大网页搜索能力的AI代理")
-    st.markdown("广度爬取官方报道与新闻，注重国内外资源相结合理解舆情")
+    # 自定义样式
+    st.markdown("""
+    <style>
+        /* 主题配色 */
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #10b981;
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+        }
+
+        /* 标题样式 */
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        /* 卡片样式 */
+        .stApp {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        /* 进度条样式 */
+        .stProgress > div > div > div {
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+
+        /* 按钮样式 */
+        .stButton > button {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .stButton > button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        /* 文本框样式 */
+        .stTextArea textarea {
+            border-radius: 8px;
+            border: 2px solid #334155;
+            background: #1e293b;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+        }
+
+        /* 标签页样式 */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 0.5rem;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            color: #94a3b8;
+        }
+
+        .stTabs [aria-selected="true"] {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        /* Expander样式 */
+        .streamlit-expanderHeader {
+            background: #1e293b;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        /* 成功/错误/警告消息样式 */
+        .stSuccess, .stError, .stWarning {
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        /* 增强所有markdown文字颜色 - 确保清晰可读 */
+        .stMarkdown, .stMarkdown p, .stMarkdown div, .stMarkdown span {
+            color: #e5e7eb !important;  /* 明亮的浅灰色 */
+        }
+
+        /* 增强markdown加粗文字 */
+        .stMarkdown strong, .stMarkdown b {
+            color: #f3f4f6 !important;  /* 更亮的白灰色 */
+            font-weight: 700;
+        }
+
+        /* 增强所有文本元素 */
+        p, div, span, label {
+            color: #d1d5db !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<h1 class="main-title">Query Agent</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">信息检索专家 | 智能网页搜索 | 多源数据聚合</p>', unsafe_allow_html=True)
 
     # 检查URL参数
     try:
@@ -120,28 +235,28 @@ def main():
 
 
 def execute_research(query: str, config: Config):
-    """执行研究"""
+    """执行智能检索"""
     try:
         # 创建进度条
         progress_bar = st.progress(0)
         status_text = st.empty()
 
         # 初始化Agent
-        status_text.text("正在初始化Agent...")
+        status_text.markdown("**正在初始化智能检索引擎...**")
         agent = DeepSearchAgent(config)
         st.session_state.agent = agent
 
         progress_bar.progress(10)
 
         # 生成报告结构
-        status_text.text("正在生成报告结构...")
+        status_text.markdown("**正在构建信息架构...**")
         agent._generate_report_structure(query)
         progress_bar.progress(20)
 
         # 处理段落
         total_paragraphs = len(agent.state.paragraphs)
         for i in range(total_paragraphs):
-            status_text.text(f"正在处理段落 {i + 1}/{total_paragraphs}: {agent.state.paragraphs[i].title}")
+            status_text.markdown(f"**检索进度 {i + 1}/{total_paragraphs}:** {agent.state.paragraphs[i].title}")
 
             # 初始搜索和总结
             agent._initial_search_and_summary(i)
@@ -156,16 +271,16 @@ def execute_research(query: str, config: Config):
             progress_bar.progress(int(progress_value))
 
         # 生成最终报告
-        status_text.text("正在生成最终报告...")
+        status_text.markdown("**正在生成智能分析报告...**")
         final_report = agent._generate_final_report()
         progress_bar.progress(90)
 
         # 保存报告
-        status_text.text("正在保存报告...")
+        status_text.markdown("**正在保存分析结果...**")
         agent._save_report(final_report)
         progress_bar.progress(100)
 
-        status_text.text("研究完成！")
+        status_text.markdown("**智能检索完成!**")
 
         # 显示结果
         display_results(agent, final_report)
@@ -175,11 +290,12 @@ def execute_research(query: str, config: Config):
 
 
 def display_results(agent: DeepSearchAgent, final_report: str):
-    """显示研究结果"""
-    st.header("研究结果")
+    """显示智能检索结果"""
+    st.markdown("---")
+    st.markdown("## 智能分析结果")
 
-    # 结果标签页（已移除下载选项）
-    tab1, tab2 = st.tabs(["研究小结", "引用信息"])
+    # 结果标签页
+    tab1, tab2 = st.tabs(["分析报告", "数据来源"])
 
     with tab1:
         st.markdown(final_report)

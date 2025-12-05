@@ -120,11 +120,14 @@ def parse_forum_log_line(line):
         # 根据来源确定消息类型和发送者
         message_type = 'agent'
         sender = f'{source} Engine'
-        
+
+        # 将转义的换行符还原为真实换行符
+        content_with_newlines = content.strip().replace('\\n', '\n').replace('\\r', '\r')
+
         return {
             'type': message_type,
             'sender': sender,
-            'content': content.strip(),
+            'content': content_with_newlines,
             'timestamp': timestamp,
             'source': source
         }
