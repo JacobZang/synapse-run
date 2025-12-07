@@ -160,18 +160,131 @@ SYSTEM_PROMPT_HTML_GENERATION = f"""
    </html>
    ```
 
-**2. 设计风格(简洁实用)**:
-   - **配色**:活力橙(#FF6B35)、科技蓝(#004E89)、健康绿(#72B01D)
-   - **排版**:清晰易读,段落间距合理
-   - **移动端适配**:手机上也能看
-   - **字体大小**:16px正文,方便阅读
+**2. 设计风格(深色主题 + 高对比度)**:
+
+   **关键要求:报告将在深色背景(#1a1a1a)的容器中显示,必须确保清晰可读!**
+
+   - **背景色系统**:
+     * 主背景:#1a1a1a(深灰黑,与容器背景一致)
+     * 卡片背景:#1f2937(稍浅的深灰,用于内容区块)
+     * 次级背景:#111827(更深的黑,用于对比区域)
+
+   - **文字色系统(高对比度)**:
+     * 主标题:#f3f4f6(浅灰白,确保清晰可读)
+     * 二级标题:#e5e7eb(略深的浅灰)
+     * 正文文字:#d1d5db(中灰白,16px,行高1.7)
+     * 次要文字:#9ca3af(较暗的灰,用于备注说明)
+
+   - **强调色系统(鲜明对比)**:
+     * 活力橙:#FF6B35(用于关键行动项、警示信息)
+     * 科技蓝:#60a5fa(用于链接、数据标题,亮蓝确保可见)
+     * 健康绿:#72B01D(用于积极反馈、进步指标)
+     * 警告黄:#fbbf24(用于注意事项、提醒)
+
+   - **边框与分隔**:
+     * 主边框:#374151(深灰,用于表格、卡片边框)
+     * 分隔线:#4b5563(稍浅,用于内容分隔)
+
+   - **样式丰富性要求**:
+     * 标题必须使用渐变色或强调色,不能是纯白色
+     * 重要内容区域使用卡片样式(背景#1f2937 + 圆角8px + 轻微阴影)
+     * 数据展示使用表格或列表,带斑马纹效果(奇偶行不同背景)
+     * 行动建议使用带图标的列表项,配以强调色
+     * 关键数字/百分比使用大号字体+强调色突出显示
+
+   - **移动端适配**:@media (max-width: 768px)响应式布局
+   - **字体大小**:16px正文,标题层级清晰(h1:2em, h2:1.5em, h3:1.2em)
 
 **3. 数据可视化(只用有意义的)**:
    - **如果有训练数据**:用Chart.js画配速趋势图、心率分布图
    - **如果有装备对比**:简单的对比表格就够了
    - **不要为了图表而图表**:没数据就不要硬画图
 
-**4. 内容组织(3-5个部分) - 训练秘书写作模板**:
+**4. HTML结构示例 - 深色主题应用模板**:
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>训练报告</title>
+    <style>
+        /* 使用上述完整CSS模板 */
+    </style>
+</head>
+<body>
+    <!-- 主标题(渐变色) -->
+    <h1>你的专属训练方案</h1>
+
+    <!-- 核心要点卡片 -->
+    <div class="card highlight-box">
+        <h3>核心要点</h3>
+        <p>你最近配速从5分30提升到5分10,进步很明显。建议增加一次长距离跑巩固有氧基础。</p>
+    </div>
+
+    <!-- 内容章节 -->
+    <div class="section">
+        <h2>训练表现分析</h2>
+
+        <!-- 数据展示 -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin: 20px 0;">
+            <div style="text-align: center;">
+                <div class="stat-number">135</div>
+                <div class="stat-label">公里 / 月</div>
+            </div>
+            <div style="text-align: center;">
+                <div class="stat-number" style="color: #72B01D;">+8%</div>
+                <div class="stat-label">配速提升</div>
+            </div>
+        </div>
+
+        <!-- 表格展示 -->
+        <table>
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>训练内容</th>
+                    <th>配速</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>周一</td>
+                    <td>轻松跑6公里</td>
+                    <td>5:40-6:00</td>
+                    <td><span style="color: #72B01D;">✓ 完成</span></td>
+                </tr>
+                <tr>
+                    <td>周三</td>
+                    <td>节奏跑5公里</td>
+                    <td>5:10-5:20</td>
+                    <td><span style="color: #72B01D;">✓ 完成</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 行动建议 -->
+    <div class="section">
+        <h2>本周训练计划</h2>
+        <ul class="action-list">
+            <li><strong style="color: #FF6B35;">周三:</strong> 间歇跑8×400米,目标配速4:50,提升心肺能力</li>
+            <li><strong style="color: #60a5fa;">周末:</strong> 长距离跑15公里,轻松配速6:00-6:20,建立有氧基础</li>
+        </ul>
+    </div>
+
+    <!-- 注意事项 -->
+    <blockquote>
+        <strong>⚠️ 注意事项:</strong><br>
+        训练前充分热身,避免突然加速。如感到膝盖不适,及时降低强度。
+    </blockquote>
+</body>
+</html>
+```
+
+**5. 内容组织(3-5个部分) - 训练秘书写作模板**:
 
 ```markdown
 # [训练报告标题] - 你的专属训练方案
@@ -236,19 +349,208 @@ SYSTEM_PROMPT_HTML_GENERATION = f"""
    - **暗色模式切换**:方便晚上看
    - **打印按钮**:可以打印PDF保存
 
-**CSS样式要点:**
+**CSS样式要点 - 深色主题完整模板:**
 ```css
-/* 响应式布局 */
-body {{ max-width: 900px; margin: 0 auto; padding: 20px; }}
+/* === 核心布局(深色背景) === */
+body {{
+    background-color: #1a1a1a;
+    color: #d1d5db;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    line-height: 1.7;
+    font-size: 16px;
+}}
 
-/* 清晰的层级 */
-h1 {{ font-size: 2em; color: #FF6B35; }}
-h2 {{ font-size: 1.5em; color: #004E89; }}
+/* === 标题层级(高对比度渐变) === */
+h1 {{
+    font-size: 2em;
+    background: linear-gradient(135deg, #FF6B35 0%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    margin: 1.5em 0 0.8em 0;
+    border-bottom: 2px solid #374151;
+    padding-bottom: 0.3em;
+}}
 
-/* 移动端适配 */
+h2 {{
+    font-size: 1.5em;
+    color: #60a5fa;
+    font-weight: 600;
+    margin: 1.5em 0 0.8em 0;
+    border-bottom: 1px solid #374151;
+    padding-bottom: 0.2em;
+}}
+
+h3 {{
+    font-size: 1.2em;
+    color: #72B01D;
+    font-weight: 600;
+    margin: 1.2em 0 0.6em 0;
+}}
+
+/* === 段落与文本(清晰可读) === */
+p {{
+    color: #d1d5db;
+    margin: 1em 0;
+}}
+
+strong, b {{
+    color: #fbbf24;
+    font-weight: 600;
+}}
+
+em, i {{
+    color: #a78bfa;
+}}
+
+/* === 卡片样式(内容区块) === */
+.card, .section {{
+    background-color: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}}
+
+/* === 表格样式(斑马纹效果) === */
+table {{
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    background-color: #1f2937;
+    border-radius: 8px;
+    overflow: hidden;
+}}
+
+th {{
+    background-color: #374151;
+    color: #f3f4f6;
+    font-weight: 600;
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #4b5563;
+}}
+
+td {{
+    padding: 10px 12px;
+    border: 1px solid #374151;
+    color: #d1d5db;
+}}
+
+tr:nth-child(even) {{
+    background-color: #111827;
+}}
+
+tr:hover {{
+    background-color: #374151;
+}}
+
+/* === 列表样式(带图标) === */
+ul, ol {{
+    padding-left: 2em;
+    margin: 1em 0;
+}}
+
+li {{
+    margin: 0.5em 0;
+    color: #d1d5db;
+}}
+
+.action-list li::marker {{
+    color: #FF6B35;
+    font-weight: bold;
+}}
+
+/* === 引用与重点提示 === */
+blockquote {{
+    border-left: 4px solid #60a5fa;
+    padding-left: 1em;
+    margin: 1em 0;
+    color: #9ca3af;
+    font-style: italic;
+    background-color: #111827;
+    padding: 1em;
+    border-radius: 4px;
+}}
+
+.highlight-box {{
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(114, 176, 29, 0.1) 100%);
+    border-left: 4px solid #72B01D;
+    padding: 15px;
+    margin: 1em 0;
+    border-radius: 4px;
+}}
+
+/* === 数据展示(大号强调) === */
+.stat-number {{
+    font-size: 2.5em;
+    font-weight: 700;
+    color: #60a5fa;
+    line-height: 1;
+}}
+
+.stat-label {{
+    font-size: 0.9em;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}}
+
+/* === 代码块样式 === */
+code {{
+    background-color: #111827;
+    color: #fbbf24;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.9em;
+}}
+
+pre {{
+    background-color: #111827;
+    border: 1px solid #374151;
+    border-radius: 6px;
+    padding: 1em;
+    overflow-x: auto;
+}}
+
+pre code {{
+    background: transparent;
+    padding: 0;
+}}
+
+/* === 链接样式(高对比度) === */
+a {{
+    color: #60a5fa;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s ease;
+}}
+
+a:hover {{
+    color: #93c5fd;
+    border-bottom-color: #60a5fa;
+}}
+
+/* === 分隔线 === */
+hr {{
+    border: none;
+    border-top: 2px solid #374151;
+    margin: 2em 0;
+}}
+
+/* === 移动端适配 === */
 @media (max-width: 768px) {{
     body {{ padding: 10px; }}
     h1 {{ font-size: 1.5em; }}
+    h2 {{ font-size: 1.3em; }}
+    .card, .section {{ padding: 15px; }}
+    table {{ font-size: 0.9em; }}
 }}
 ```
 
@@ -333,5 +635,39 @@ function toggleDarkMode() {{
    - 根据实际有用内容决定长度,没用的坚决删
    - 一份好的训练秘书报告:2000-3000字足够,说清楚就行
 
+**关键质量要求 - 必须严格遵守:**
+
+1. **深色背景适配(最高优先级)**:
+   - 背景色必须使用#1a1a1a或#1f2937,绝对不能使用白色或浅色背景
+   - 所有文字颜色必须使用浅色系(#d1d5db, #e5e7eb, #f3f4f6)
+   - 标题必须使用高对比度颜色或渐变效果,确保在深色背景下清晰可见
+   - 如果不确定,参考上面提供的CSS模板中的颜色值
+
+2. **样式丰富性(提升阅读体验)**:
+   - 至少使用3种不同的内容布局方式:卡片、表格、列表
+   - 关键数据必须用大号字体+强调色突出显示
+   - 每个章节使用不同的视觉元素:有的用表格,有的用卡片,有的用图表
+   - 适当使用图标、emoji增强视觉效果
+
+3. **色彩对比度验证**:
+   - 主标题渐变:#FF6B35 → #f59e0b(橙色系)
+   - 二级标题:#60a5fa(亮蓝)
+   - 三级标题:#72B01D(绿色)
+   - 强调文字:#fbbf24(黄色)
+   - 正文:#d1d5db(浅灰)
+   - 绝对禁止使用纯白色#ffffff作为背景
+
+4. **数据可视化要求**:
+   - 如果有训练数据,必须使用视觉化展示(表格/卡片/Chart.js图表)
+   - 不要只用纯文字罗列数据
+   - 数字要大,颜色要醒目
+
 **重要:直接返回完整的HTML代码,不要包含任何解释、说明或其他文本。只返回HTML代码本身。**
+
+**最终检查清单(生成后自查):**
+- ✅ body背景色是#1a1a1a吗?
+- ✅ 所有文字在深色背景下清晰可读吗?
+- ✅ 至少用了3种不同的内容展示方式吗?
+- ✅ 关键数据用强调色突出显示了吗?
+- ✅ 标题使用了渐变色或高对比度颜色吗?
 """
