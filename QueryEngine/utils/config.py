@@ -124,7 +124,6 @@ def load_config(config_file: Optional[str] = None) -> Config:
         for candidate in ("config.py", "config.env", ".env"):
             if os.path.exists(candidate):
                 file_to_load = candidate
-                print(f"已找到配置文件: {candidate}")
                 break
         else:
             raise FileNotFoundError("未找到配置文件，请创建 config.py。")
