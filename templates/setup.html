@@ -462,6 +462,10 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                     重新检查
                 </button>
+                <button class="action-btn primary hidden" id="importDataButton" onclick="showImportForm()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    导入训练数据
+                </button>
                 <button class="action-btn primary hidden" id="configButton" onclick="showConfigForm()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m-8-6h6m6 0h6"></path></svg>
                     去配置
@@ -572,6 +576,52 @@
                 </div>
             </form>
         </div>
+
+        <!-- 数据导入视图 -->
+        <div id="importView" class="hidden">
+            <header>
+                <div class="brand">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <div>
+                        <h1>训练数据导入</h1>
+                        <p>Import Training Data</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="config-section">
+                <div class="alert" style="background: var(--bg-warning-light); color: var(--color-warning); border: 1px solid rgba(245, 158, 11, 0.2);">
+                    <strong>⚠️ 重要提示</strong><br>
+                    • 请确保已保存数据库配置<br>
+                    • 导入将覆盖现有所有训练记录<br>
+                    • 仅支持Keep导出的Excel格式(.xlsx/.xls)
+                </div>
+
+                <div class="form-group">
+                    <label for="importExcelFile">选择Excel文件 *</label>
+                    <input type="file" id="importExcelFile" accept=".xlsx,.xls" style="display: none;" onchange="handleImportExcelFileSelect(event)">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button type="button" class="action-btn secondary" onclick="document.getElementById('importExcelFile').click()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            选择文件
+                        </button>
+                        <span id="importSelectedFileName" style="color: var(--text-sub); font-size: 13px;">未选择文件</span>
+                    </div>
+                </div>
+
+                <div class="test-result hidden" id="importResult"></div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="action-btn secondary" onclick="hideImportForm()">返回</button>
+                    <button type="button" class="action-btn primary hidden" id="startImportButton" onclick="startImport()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        开始导入
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -622,6 +672,8 @@
                     // 根据状态显示按钮
                     if (healthCheckData.overall_status === 'ready') {
                         continueButton.classList.remove('hidden');
+                        // 配置完成后显示数据导入按钮
+                        document.getElementById('importDataButton').classList.remove('hidden');
                         statusBadge.textContent = '配置完成';
                         statusBadge.className = 'status-badge ready';
                     } else {
@@ -785,6 +837,7 @@
         function testMySQLConnection() {
             const resultDiv = document.getElementById('mysqlTestResult');
             const initButton = document.getElementById('initDbButton');
+
             resultDiv.className = 'test-result';
             resultDiv.innerHTML = '<div class="loading"></div> 正在测试MySQL连接...';
             resultDiv.classList.remove('hidden');
@@ -887,11 +940,11 @@
             .then(result => {
                 if (result.success) {
                     alertDiv.className = 'alert success';
-                    alertDiv.textContent = '✅ ' + result.message;
+                    alertDiv.innerHTML = '✅ ' + result.message + '<br><small style="margin-top: 8px; display: block;">💡 配置已保存,现在可以在健康检查页面进行数据导入</small>';
                     setTimeout(() => {
                         hideConfigForm();
                         runHealthCheck();
-                    }, 1500);
+                    }, 2500);
                 } else {
                     alertDiv.className = 'alert error';
                     alertDiv.textContent = '❌ ' + result.message;
@@ -906,6 +959,101 @@
         // 进入主系统
         function goToMain() {
             window.location.href = '/';
+        }
+
+        // 显示数据导入表单
+        function showImportForm() {
+            document.getElementById('healthCheckView').classList.add('hidden');
+            document.getElementById('importView').classList.remove('hidden');
+            resetImportForm();
+        }
+
+        // 隐藏数据导入表单
+        function hideImportForm() {
+            document.getElementById('importView').classList.add('hidden');
+            document.getElementById('healthCheckView').classList.remove('hidden');
+        }
+
+        // 重置导入表单
+        function resetImportForm() {
+            const importResult = document.getElementById('importResult');
+            importResult.classList.add('hidden');
+            importResult.className = 'test-result hidden';
+            importResult.innerHTML = '';
+
+            const startImportButton = document.getElementById('startImportButton');
+            startImportButton.classList.add('hidden');
+
+            const importSelectedFileName = document.getElementById('importSelectedFileName');
+            importSelectedFileName.textContent = '未选择文件';
+
+            const importExcelFileInput = document.getElementById('importExcelFile');
+            if (importExcelFileInput) importExcelFileInput.value = '';
+
+            selectedImportExcelFile = null;
+        }
+
+        // 处理Excel文件选择
+        let selectedImportExcelFile = null;
+
+        function handleImportExcelFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            selectedImportExcelFile = file;
+            document.getElementById('importSelectedFileName').textContent = file.name;
+            document.getElementById('startImportButton').classList.remove('hidden');
+        }
+
+        // 开始导入
+        function startImport() {
+            if (!selectedImportExcelFile) {
+                alert('请先选择Excel文件');
+                return;
+            }
+
+            if (!confirm('确认导入训练数据吗?\n\n⚠️ 这将覆盖现有的所有训练记录!')) {
+                return;
+            }
+
+            const resultDiv = document.getElementById('importResult');
+            const importButton = document.getElementById('startImportButton');
+
+            resultDiv.className = 'test-result';
+            resultDiv.innerHTML = '<div class="loading"></div> 正在上传并导入数据,请稍候...';
+            resultDiv.classList.remove('hidden');
+            importButton.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', selectedImportExcelFile);
+
+            fetch('/api/upload_training_excel', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                importButton.disabled = false;
+
+                if (result.success) {
+                    resultDiv.className = 'test-result success';
+                    resultDiv.innerHTML = `✅ ${result.message}<br><small>成功: ${result.result.success}条 | 失败: ${result.result.failed}条</small>`;
+
+                    // 重置文件选择
+                    selectedImportExcelFile = null;
+                    document.getElementById('importExcelFile').value = '';
+                    document.getElementById('importSelectedFileName').textContent = '未选择文件';
+                    importButton.classList.add('hidden');
+                } else {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = '❌ ' + result.message;
+                }
+            })
+            .catch(error => {
+                importButton.disabled = false;
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = '❌ 上传失败: ' + error.message;
+            });
         }
     </script>
 </body>

@@ -1,55 +1,70 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-训练数据导入脚本
-从Excel文件(406099.xlsx)导入训练记录到MySQL数据库
+训练数据导入脚本 - 使用SQLAlchemy ORM安全导入
+从Excel文件导入训练记录到MySQL数据库
 
 使用方法:
-1. 确保数据库已创建training_records表 (执行training_tables.sql)
-2. 设置环境变量: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+1. 确保数据库已创建training_records表
+2. 配置config.py中的数据库连接参数
 3. 运行: python scripts/import_training_data.py
 
 功能:
+- 使用SQLAlchemy ORM避免SQL注入风险
 - 自动解析Excel文件
-- 清洗数据(处理NaN值、时间格式转换)
+- 数据清洗(处理NaN值、时间格式转换)
 - 批量导入到数据库
-- 支持重复运行(使用INSERT IGNORE避免重复)
+- 支持覆盖写入模式(TRUNCATE TABLE)
 """
 
 import os
 import sys
-import json
-import pymysql
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+# 导入必需模块
+import config
+from models.training_record import TrainingRecord, Base
+from sqlalchemy import create_engine
+
+
 class TrainingDataImporter:
-    """训练数据导入器"""
+    """训练数据导入器 - 使用SQLAlchemy ORM"""
 
-    def __init__(self, excel_path: str):
+    def __init__(self, excel_path: str, db_engine=None):
+        """
+        初始化导入器
+
+        Args:
+            excel_path: Excel文件路径
+            db_engine: SQLAlchemy引擎,如果为None则直接从config构建
+        """
         self.excel_path = excel_path
-        self.db_config = {
-            'host': "localhost",
-            'user': "huangsuxiang",
-            'password': "Wodeshijie1.12",
-            'db': "traningData",
-            'port': 3306,
-            'charset': "utf8mb4",
-        }
-        self._validate_db_config()
 
-    def _validate_db_config(self):
-        """验证数据库配置"""
-        required = ['host', 'user', 'password', 'db']
-        if missing := [k for k in required if not self.db_config[k]]:
-            raise ValueError(
-                f"数据库配置缺失! 请设置环境变量: {', '.join([f'DB_{k.upper()}' for k in missing])}"
+        if db_engine:
+            self.engine = db_engine
+        else:
+            # 直接从config构建引擎,避免importlib.reload的不确定性
+            connection_string = (
+                f'mysql+pymysql://{config.DB_USER}:{config.DB_PASSWORD}'
+                f'@{config.DB_HOST}:{config.DB_PORT}/{config.DB_NAME}'
+                f'?charset={config.DB_CHARSET}'
             )
+            self.engine = create_engine(
+                connection_string,
+                pool_pre_ping=True,
+                pool_recycle=3600,
+                echo=False
+            )
+
+        self.SessionLocal = sessionmaker(bind=self.engine, autoflush=False, autocommit=False)
 
     def load_excel(self) -> pd.DataFrame:
         """加载Excel文件"""
@@ -57,7 +72,7 @@ class TrainingDataImporter:
         if not os.path.exists(self.excel_path):
             raise FileNotFoundError(f"Excel文件不存在: {self.excel_path}")
 
-        # 读取Excel,排除最后一列(运动轨迹)
+        # 读取Excel,排除运动轨迹列
         df = pd.read_excel(self.excel_path)
         print(f"   原始列: {df.columns.tolist()}")
 
@@ -97,105 +112,109 @@ class TrainingDataImporter:
         print(f"   清洗完成, 有效记录: {len(df)}")
         return df
 
-    def create_table_if_not_exists(self, conn):
+    def create_table_if_not_exists(self):
         """如果表不存在则创建"""
         print("[3/4] 检查数据库表...")
-        with conn.cursor() as cursor:
-            # 检查表是否存在
-            cursor.execute("SHOW TABLES LIKE 'training_records'")
-            result = cursor.fetchone()
+        Base.metadata.create_all(bind=self.engine)
+        print("   表结构检查完成")
 
-            if not result:
-                print("   表不存在,正在创建training_records表...")
-                # 读取SQL文件
-                sql_file = project_root / "scripts/training_tables.sql"
-                if not sql_file.exists():
-                    raise FileNotFoundError(f"SQL文件不存在: {sql_file}")
+    def import_to_db(self, df: pd.DataFrame, truncate_first: bool = False):
+        """
+        导入数据到数据库 - 使用SQLAlchemy ORM
 
-                with open(sql_file, 'r', encoding='utf-8') as f:
-                    sql_script = f.read()
+        Args:
+            df: 待导入的DataFrame
+            truncate_first: 是否先清空表(覆盖写入模式)
 
-                # 分割并执行SQL语句
-                for statement in sql_script.split(';'):
-                    statement = statement.strip()
-                    if statement and not statement.startswith('--'):
-                        try:
-                            cursor.execute(statement)
-                        except pymysql.Error as e:
-                            # 忽略视图创建错误(可能已存在)
-                            if 'CREATE OR REPLACE VIEW' not in statement:
-                                print(f"   警告: SQL执行失败 - {e}")
-
-                conn.commit()
-                print("   表创建成功!")
-            else:
-                print("   表已存在,跳过创建")
-
-    def import_to_db(self, df: pd.DataFrame):
-        """导入数据到数据库"""
+        Returns:
+            dict: 导入结果统计 {'success': int, 'failed': int, 'total': int}
+        """
         print("[4/4] 导入数据到数据库...")
 
-        conn = pymysql.connect(**self.db_config)
-        try:
-            # 创建表(如果不存在)
-            self.create_table_if_not_exists(conn)
+        # 创建表(如果不存在)
+        self.create_table_if_not_exists()
 
-            # 准备插入语句
-            insert_sql = """
-                INSERT IGNORE INTO training_records (
-                    user_id, exercise_type, duration_seconds, start_time, end_time,
-                    calories, distance_meters, avg_heart_rate, max_heart_rate,
-                    heart_rate_data, add_ts, last_modify_ts, data_source
-                ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-                )
-            """
+        session = self.SessionLocal()
+        try:
+            # 覆盖写入模式:先清��表
+            if truncate_first:
+                print("   覆盖写入模式:清空现有数据...")
+                session.query(TrainingRecord).delete()
+                session.commit()
+                print("   数据清空完成")
 
             now_ts = int(datetime.now().timestamp())
             success_count = 0
             failed_count = 0
+            batch_records = []
 
-            with conn.cursor() as cursor:
-                for idx, row in df.iterrows():
-                    try:
-                        values = (
-                            'default_user',  # user_id
-                            row['运动类型'],
-                            int(row['运动时长(秒)']),
-                            row['开始时间'],
-                            row['结束时间'],
-                            int(row['卡路里']) if row['卡路里'] else None,
-                            float(row['运动距离(米)']) if row['运动距离(米)'] else None,
-                            int(row['平均心率']) if row['平均心率'] else None,
-                            int(row['最大心率']) if row['最大心率'] else None,
-                            str(row['心率记录']) if row['心率记录'] else '[]',
-                            now_ts,
-                            now_ts,
-                            'excel_import'
-                        )
-                        cursor.execute(insert_sql, values)
-                        success_count += 1
+            for idx, row in df.iterrows():
+                try:
+                    # 使用ORM模型创建记录
+                    record = TrainingRecord(
+                        user_id='default_user',
+                        exercise_type=row['运动类型'],
+                        duration_seconds=int(row['运动时长(秒)']),
+                        start_time=row['开始时间'].to_pydatetime(),
+                        end_time=row['结束时间'].to_pydatetime(),
+                        calories=int(row['卡路里']) if pd.notna(row['卡路里']) else None,
+                        distance_meters=float(row['运动距离(米)']) if pd.notna(row['运动距离(米)']) else None,
+                        avg_heart_rate=int(row['平均心率']) if pd.notna(row['平均心率']) else None,
+                        max_heart_rate=int(row['最大心率']) if pd.notna(row['最大心率']) else None,
+                        heart_rate_data=str(row['心率记录']) if pd.notna(row['心率记录']) else '[]',
+                        add_ts=now_ts,
+                        last_modify_ts=now_ts,
+                        data_source='excel_import'
+                    )
 
-                        if (idx + 1) % 100 == 0:
-                            print(f"   已处理 {idx + 1}/{len(df)} 条记录...")
+                    batch_records.append(record)
+                    success_count += 1
 
-                    except Exception as e:
-                        failed_count += 1
-                        print(f"   第{idx+1}行导入失败: {e}")
+                    # 批量提交(每100条)
+                    if len(batch_records) >= 100:
+                        session.bulk_save_objects(batch_records)
+                        session.commit()
+                        print(f"   已处理 {success_count}/{len(df)} 条记录...")
+                        batch_records = []
 
-                conn.commit()
+                except Exception as e:
+                    failed_count += 1
+                    print(f"   第{idx+1}行导入失败: {e}")
+                    session.rollback()
+
+            # 提交剩余记录
+            if batch_records:
+                session.bulk_save_objects(batch_records)
+                session.commit()
 
             print(f"\n导入完成!")
             print(f"   成功: {success_count} 条")
             print(f"   失败: {failed_count} 条")
 
-        finally:
-            conn.close()
+            return {
+                'success': success_count,
+                'failed': failed_count,
+                'total': len(df)
+            }
 
-    def run(self):
-        """执行完整导入流程"""
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+
+    def run(self, truncate_first: bool = False):
+        """
+        执行完整导入流程
+
+        Args:
+            truncate_first: 是否覆盖写入(先清空表)
+
+        Returns:
+            dict: 导入结果统计
+        """
         print("="*80)
-        print("训练数据导入工具")
+        print("训练数据导入工具 (SQLAlchemy ORM)")
         print("="*80)
 
         try:
@@ -206,30 +225,33 @@ class TrainingDataImporter:
             df = self.clean_data(df)
 
             # 导入数据库
-            self.import_to_db(df)
+            result = self.import_to_db(df, truncate_first=truncate_first)
 
             print("\n✅ 导入成功!")
+            return result
 
         except Exception as e:
             print(f"\n❌ 导入失败: {e}")
             import traceback
             traceback.print_exc()
-            sys.exit(1)
+            raise  # 重新抛出异常供调用方处理
+
 
 def main():
     """主函数"""
     # Excel文件路径
-    excel_path = "/home/dzs-ai-4/dzs-dev/Agent/multiRunningAgents/data/406099.xlsx"
+    excel_path = Path(project_root) / "data" / "406099.xlsx"
 
     # 检查文件是否存在
     if not excel_path.exists():
         print(f"错误: Excel文件不存在 - {excel_path}")
-        print("请将406099.xlsx文件放在项目根目录下")
+        print("请将406099.xlsx文件放在 data/ 目录下")
         sys.exit(1)
 
     # 执行导入
     importer = TrainingDataImporter(str(excel_path))
     importer.run()
+
 
 if __name__ == "__main__":
     main()

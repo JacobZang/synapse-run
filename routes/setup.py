@@ -7,12 +7,18 @@ from flask import Blueprint, render_template, request, jsonify
 import os
 import re
 from pathlib import Path
+from werkzeug.utils import secure_filename
 
 # 创建Blueprint
 setup_bp = Blueprint('setup', __name__)
 
 # 导入健康检查模块
 from utils.health_check import run_health_check
+
+# 导入训练数据导入器
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from scripts.import_training_data import TrainingDataImporter
 
 
 @setup_bp.route('/setup')
@@ -301,6 +307,76 @@ def test_mysql_connection():
                 'success': False,
                 'message': f'MySQL连接失败: {error_msg}'
             })
+
+
+@setup_bp.route('/api/upload_training_excel', methods=['POST'])
+def upload_training_excel():
+    """
+    上传并导入训练数据Excel
+
+    请求参数:
+    - file: Excel文件(multipart/form-data)
+
+    返回:
+    - success: 是否成功
+    - message: 提示信息
+    - result: 导入统计 {'success': int, 'failed': int, 'total': int}
+    """
+    try:
+        # 检查文件是否存在
+        if 'file' not in request.files:
+            return jsonify({
+                'success': False,
+                'message': '请选择Excel文件'
+            }), 400
+
+        file = request.files['file']
+
+        # 检查文件名
+        if file.filename == '':
+            return jsonify({
+                'success': False,
+                'message': '未选择文件'
+            }), 400
+
+        # 检查文件扩展名
+        if not file.filename.lower().endswith(('.xlsx', '.xls')):
+            return jsonify({
+                'success': False,
+                'message': '只支持Excel文件(.xlsx/.xls)'
+            }), 400
+
+        # 确保data目录存在
+        data_dir = Path(__file__).parent.parent / 'data'
+        data_dir.mkdir(parents=True, exist_ok=True)
+
+        # 安全文件名处理
+        filename = secure_filename(file.filename)
+        # 统一使用keep_data.xlsx作为标准文件名
+        filepath = data_dir / 'keep_data.xlsx'
+
+        # 保存文件(覆盖旧文件)
+        file.save(str(filepath))
+
+        # 执行导入(覆盖写入模式)
+        importer = TrainingDataImporter(str(filepath))
+        result = importer.run(truncate_first=True)
+
+        return jsonify({
+            'success': True,
+            'message': f'导入成功! 共{result["success"]}条记录',
+            'result': result
+        })
+
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"Excel导入失败: {error_detail}")
+
+        return jsonify({
+            'success': False,
+            'message': f'导入失败: {str(e)}'
+        }), 500
 
 
 @setup_bp.route('/api/init_database', methods=['POST'])

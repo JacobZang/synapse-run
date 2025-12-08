@@ -16,6 +16,12 @@
 
 ## 📢 Changelog
 
+### 2025.12.8 - Training Data Import Fix
+- **🔧 Database Connection Fix**: Fixed database authentication failure during Excel training data import
+- **⚡ Configuration Reading Optimization**: Removed unreliable `importlib.reload()` mechanism, now builds database engine directly from config.py
+- **✅ Stability Improvement**: TrainingDataImporter now accurately reads latest database configuration on each initialization, avoiding environment variable interference
+- **📊 Web Upload Guarantee**: Ensures database connection stability when uploading Excel files through web interface (/setup)
+
 ### 2025.12.8 - Visual Configuration System Launch
 - **🎨 Visual Configuration Interface**: New web-based configuration page (`/setup`) supporting LLM API, Search API, and MySQL database visual configuration
 - **✅ Intelligent Health Check**: Automatic 8-item health check on system startup, redirects to configuration page if incomplete
