@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synapse Run 系统配置</title>
+    <style>
+        /* --- 基础重置 --- */
+        :root {
+            --bg-body: #f5f7fa;
+            --bg-card: #ffffff;
+            --text-main: #2c3e50;
+            --text-sub: #7f8c8d;
+            --border-color: #eef2f7;
+
+            /* 状态色 - 莫兰迪色系调整 */
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-error: #ef4444;
+            --bg-error-light: #fef2f2;
+            --bg-success-light: #ecfdf5;
+            --bg-warning-light: #fffbeb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* --- 主容器 --- */
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            height: 90vh;
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- 头部 --- */
+        header {
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .brand p {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-top: 2px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.ready {
+            background-color: var(--bg-success-light);
+            color: var(--color-success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-badge.partial {
+            background-color: var(--bg-warning-light);
+            color: var(--color-warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .status-badge.needs_config {
+            background-color: var(--bg-error-light);
+            color: var(--color-error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        /* --- 仪表盘统计区 --- */
+        .dashboard-stats {
+            display: flex;
+            padding: 15px 40px;
+            background-color: #fafbfc;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .stat-item:last-child { border-right: none; }
+
+        .stat-num {
+            display: block;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 颜色应用 */
+        .c-success { color: var(--color-success); }
+        .c-warning { color: var(--color-warning); }
+        .c-error { color: var(--color-error); }
+
+        /* --- 列表区域 --- */
+        .check-list {
+            list-style: none;
+            padding: 20px 40px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .list-item:last-child { border-bottom: none; }
+
+        /* 图标容器 */
+        .icon-box {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .icon-box.success { background-color: #ecfdf5; }
+        .icon-box.warning { background-color: #fffbeb; }
+        .icon-box.error { background-color: #fef2f2; }
+
+        /* SVG 图标样式 */
+        .icon-box svg { width: 20px; height: 20px; }
+        .icon-box.success svg { stroke: var(--color-success); }
+        .icon-box.warning svg { stroke: var(--color-warning); }
+        .icon-box.error svg { stroke: var(--color-error); }
+
+        .content {
+            flex: 1;
+        }
+
+        .content h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #333;
+        }
+
+        .content p {
+            font-size: 13px;
+            color: var(--text-sub);
+        }
+
+        .error-detail {
+            margin-top: 6px;
+            font-size: 12px;
+            background: rgba(239, 68, 68, 0.05);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .error-detail-item {
+            color: var(--color-error);
+            margin: 2px 0;
+        }
+
+        /* 按钮样式 */
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 15px 40px;
+            border-top: 1px solid var(--border-color);
+            background-color: #fafbfc;
+            flex-shrink: 0;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 500;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+
+        .action-btn.primary {
+            background-color: var(--color-error);
+        }
+
+        .action-btn.secondary {
+            background-color: #6b7280;
+        }
+
+        .action-btn.success {
+            background-color: var(--color-success);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Loading 动画 */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--color-error);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 隐藏类 */
+        .hidden { display: none !important; }
+
+        /* 配置表单样式 */
+        .config-section {
+            padding: 20px 40px;
+        }
+
+        #configForm {
+            display: flex;
+            flex-direction: column;
+            height: calc(90vh - 100px);
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1a202c;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--color-error);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .test-result {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .test-result.success {
+            background: var(--bg-success-light);
+            color: var(--color-success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .test-result.error {
+            background: var(--bg-error-light);
+            color: var(--color-error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .test-result.warning {
+            background: var(--bg-warning-light);
+            color: var(--color-warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .alert.success {
+            background: var(--bg-success-light);
+            color: var(--color-success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .alert.error {
+            background: var(--bg-error-light);
+            color: var(--color-error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        /* 健康检查视图 */
+        #healthCheckView {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* 配置视图 */
+        #configView {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                overflow: auto;
+            }
+            .container {
+                height: auto;
+                max-height: none;
+            }
+            header, .dashboard-stats, .check-list, .config-section, .action-buttons {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            #configForm {
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 健康检查视图 -->
+        <div id="healthCheckView">
+            <!-- 顶部标题 -->
+            <header>
+                <div class="brand">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                    </svg>
+                    <div>
+                        <h1>系统配置检查</h1>
+                        <p>Synapse Run Environment</p>
+                    </div>
+                </div>
+                <div class="status-badge" id="overallStatus">检查中...</div>
+            </header>
+
+            <!-- 加载状态 -->
+            <div id="healthCheckLoading" class="dashboard-stats hidden">
+                <div style="text-align: center; width: 100%; padding: 20px 0;">
+                    <div class="loading"></div>
+                    <span style="margin-left: 10px; color: var(--text-sub);">正在检查系统配置...</span>
+                </div>
+            </div>
+
+            <!-- 统计数据 -->
+            <div class="dashboard-stats hidden" id="dashboardStats">
+                <div class="stat-item">
+                    <span class="stat-num c-success" id="successCount">0</span>
+                    <span class="stat-label">正常</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num c-warning" id="warningCount">0</span>
+                    <span class="stat-label">警告</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num c-error" id="errorCount">0</span>
+                    <span class="stat-label">错误</span>
+                </div>
+            </div>
+
+            <!-- 详细列表 -->
+            <ul class="check-list" id="checkList"></ul>
+
+            <!-- 操作按钮 -->
+            <div class="action-buttons">
+                <button class="action-btn secondary" onclick="runHealthCheck()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                    重新检查
+                </button>
+                <button class="action-btn primary hidden" id="configButton" onclick="showConfigForm()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m-8-6h6m6 0h6"></path></svg>
+                    去配置
+                </button>
+                <button class="action-btn success hidden" id="continueButton" onclick="goToMain()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    进入系统
+                </button>
+            </div>
+        </div>
+
+        <!-- 配置表单视图 -->
+        <div id="configView" class="hidden">
+            <header>
+                <div class="brand">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6"></path><path d="m4.93 4.93 4.24 4.24m5.66 5.66 4.24 4.24"></path><path d="m4.93 19.07 4.24-4.24m5.66-5.66 4.24-4.24"></path>
+                    </svg>
+                    <div>
+                        <h1>系统配置</h1>
+                        <p>Configuration Settings</p>
+                    </div>
+                </div>
+            </header>
+
+            <div id="configAlert" class="hidden"></div>
+
+            <form id="configForm">
+                <div class="config-section">
+                    <div class="section-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        LLM配置
+                    </div>
+                    <div class="form-group">
+                        <label for="llmApiKey">LLM API Key *</label>
+                        <input type="text" id="llmApiKey" name="llm_api_key" placeholder="your_qwen_api_key_here" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="llmBaseUrl">LLM Base URL *</label>
+                        <input type="text" id="llmBaseUrl" name="llm_base_url" value="https://dashscope.aliyuncs.com/compatible-mode/v1" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="defaultModel">默认模型</label>
+                            <input type="text" id="defaultModel" name="default_model" value="qwen-plus-latest">
+                        </div>
+                        <div class="form-group">
+                            <label for="reportModel">报告模型</label>
+                            <input type="text" id="reportModel" name="report_model" value="qwen3-max">
+                        </div>
+                    </div>
+                    <div class="test-result hidden" id="llmTestResult"></div>
+                    <button type="button" class="action-btn secondary" onclick="testLLMConnection()">测试LLM连接</button>
+                </div>
+
+                <div class="config-section" style="border-top: 1px solid var(--border-color);">
+                    <div class="section-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+                        搜索API配置
+                    </div>
+                    <div class="form-group">
+                        <label for="tavilyApiKey">Tavily API Key</label>
+                        <input type="text" id="tavilyApiKey" name="tavily_api_key" placeholder="your_tavily_api_key_here">
+                    </div>
+                    <div class="form-group">
+                        <label for="bochaApiKey">Bocha API Key</label>
+                        <input type="text" id="bochaApiKey" name="bocha_api_key" placeholder="your_bocha_api_key_here">
+                    </div>
+                </div>
+
+                <div class="config-section" style="border-top: 1px solid var(--border-color);">
+                    <div class="section-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                        MySQL配置
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dbHost">数据库地址 *</label>
+                            <input type="text" id="dbHost" name="db_host" value="localhost" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dbPort">数据库端口 *</label>
+                            <input type="number" id="dbPort" name="db_port" value="3306" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dbUser">数据库用户名 *</label>
+                            <input type="text" id="dbUser" name="db_user" placeholder="root" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dbPassword">数据库密码 *</label>
+                            <input type="password" id="dbPassword" name="db_password" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dbName">数据库名称 *</label>
+                        <input type="text" id="dbName" name="db_name" value="traningData" required>
+                    </div>
+                    <div class="test-result hidden" id="mysqlTestResult"></div>
+                    <button type="button" class="action-btn secondary" onclick="testMySQLConnection()">测试MySQL连接</button>
+                    <button type="button" class="action-btn primary hidden" id="initDbButton" onclick="initDatabase()" style="margin-left: 10px;">初始化数据库</button>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="button" class="action-btn secondary" onclick="hideConfigForm()">返回</button>
+                    <button type="submit" class="action-btn success">保存配置</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let healthCheckData = null;
+
+        // 页面加载时自动运行健康检查
+        window.onload = function() {
+            runHealthCheck();
+        };
+
+        // SVG图标定义
+        const icons = {
+            success: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+            warning: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+            error: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>'
+        };
+
+        // 运行健康检查
+        function runHealthCheck() {
+            const loadingDiv = document.getElementById('healthCheckLoading');
+            const statsDiv = document.getElementById('dashboardStats');
+            const listDiv = document.getElementById('checkList');
+            const configButton = document.getElementById('configButton');
+            const continueButton = document.getElementById('continueButton');
+            const statusBadge = document.getElementById('overallStatus');
+
+            loadingDiv.classList.remove('hidden');
+            statsDiv.classList.add('hidden');
+            listDiv.innerHTML = '';
+            configButton.classList.add('hidden');
+            continueButton.classList.add('hidden');
+            statusBadge.textContent = '检查中...';
+            statusBadge.className = 'status-badge';
+
+            fetch('/api/health_check')
+                .then(response => response.json())
+                .then(data => {
+                    loadingDiv.classList.add('hidden');
+
+                    if (!data.success) {
+                        listDiv.innerHTML = `<div class="alert error">健康检查失败: ${data.message}</div>`;
+                        return;
+                    }
+
+                    healthCheckData = data.data;
+                    displayHealthCheck(healthCheckData);
+
+                    // 根据状态显示按钮
+                    if (healthCheckData.overall_status === 'ready') {
+                        continueButton.classList.remove('hidden');
+                        statusBadge.textContent = '配置完成';
+                        statusBadge.className = 'status-badge ready';
+                    } else {
+                        configButton.classList.remove('hidden');
+                        if (healthCheckData.overall_status === 'partial') {
+                            statusBadge.textContent = '部分完成';
+                            statusBadge.className = 'status-badge partial';
+                        } else {
+                            statusBadge.textContent = '需要配置';
+                            statusBadge.className = 'status-badge needs_config';
+                        }
+                    }
+                })
+                .catch(error => {
+                    loadingDiv.classList.add('hidden');
+                    listDiv.innerHTML = `<div class="alert error">健康检查失败: ${error.message}</div>`;
+                });
+        }
+
+        // 显示健康检查结果
+        function displayHealthCheck(data) {
+            const statsDiv = document.getElementById('dashboardStats');
+            const listDiv = document.getElementById('checkList');
+
+            // 显示统计
+            document.getElementById('successCount').textContent = data.summary.success;
+            document.getElementById('warningCount').textContent = data.summary.warning;
+            document.getElementById('errorCount').textContent = data.summary.error;
+            statsDiv.classList.remove('hidden');
+
+            // 显示详细检查结果
+            let html = '';
+            for (const [key, check] of Object.entries(data.checks)) {
+                html += `
+                    <li class="list-item">
+                        <div class="icon-box ${check.status}">
+                            ${icons[check.status]}
+                        </div>
+                        <div class="content">
+                            <h3>${check.name}</h3>
+                            <p>${check.message}</p>
+                `;
+
+                if (check.details) {
+                    html += '<div class="error-detail">';
+                    if (Array.isArray(check.details)) {
+                        check.details.forEach(detail => {
+                            html += `<div class="error-detail-item">• ${detail}</div>`;
+                        });
+                    } else {
+                        html += `<div class="error-detail-item">${check.details}</div>`;
+                    }
+                    html += '</div>';
+                }
+
+                html += '</div></li>';
+            }
+
+            listDiv.innerHTML = html;
+        }
+
+        // 显示配置表单
+        function showConfigForm() {
+            document.getElementById('healthCheckView').classList.add('hidden');
+            document.getElementById('configView').classList.remove('hidden');
+            loadCurrentConfig();
+            // 重置测试结果状态
+            resetTestResults();
+        }
+
+        // 隐藏配置表单
+        function hideConfigForm() {
+            document.getElementById('configView').classList.add('hidden');
+            document.getElementById('healthCheckView').classList.remove('hidden');
+        }
+
+        // 重置测试结果状态
+        function resetTestResults() {
+            // 隐藏LLM测试结果
+            const llmTestResult = document.getElementById('llmTestResult');
+            llmTestResult.classList.add('hidden');
+            llmTestResult.className = 'test-result hidden';
+            llmTestResult.innerHTML = '';
+
+            // 隐藏MySQL测试结果和初始化按钮
+            const mysqlTestResult = document.getElementById('mysqlTestResult');
+            mysqlTestResult.classList.add('hidden');
+            mysqlTestResult.className = 'test-result hidden';
+            mysqlTestResult.innerHTML = '';
+
+            const initDbButton = document.getElementById('initDbButton');
+            initDbButton.classList.add('hidden');
+
+            // 隐藏配置保存提示
+            const configAlert = document.getElementById('configAlert');
+            configAlert.classList.add('hidden');
+            configAlert.className = 'hidden';
+            configAlert.innerHTML = '';
+        }
+
+        // 加载当前配置
+        function loadCurrentConfig() {
+            fetch('/api/get_config')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const config = data.data;
+                        document.getElementById('llmApiKey').value = config.llm_api_key || '';
+                        document.getElementById('llmBaseUrl').value = config.llm_base_url || '';
+                        document.getElementById('defaultModel').value = config.default_model || '';
+                        document.getElementById('reportModel').value = config.report_model || '';
+                        document.getElementById('tavilyApiKey').value = config.tavily_api_key || '';
+                        document.getElementById('bochaApiKey').value = config.bocha_api_key || '';
+                        document.getElementById('dbHost').value = config.db_host || '';
+                        document.getElementById('dbPort').value = config.db_port || '';
+                        document.getElementById('dbUser').value = config.db_user || '';
+                        document.getElementById('dbPassword').value = config.db_password || '';
+                        document.getElementById('dbName').value = config.db_name || '';
+                    }
+                })
+                .catch(error => {
+                    console.error('加载配置失败:', error);
+                });
+        }
+
+        // 测试LLM连接
+        function testLLMConnection() {
+            const resultDiv = document.getElementById('llmTestResult');
+            resultDiv.className = 'test-result';
+            resultDiv.innerHTML = '<div class="loading"></div> 正在测试LLM连接...';
+            resultDiv.classList.remove('hidden');
+
+            const data = {
+                api_key: document.getElementById('llmApiKey').value,
+                base_url: document.getElementById('llmBaseUrl').value,
+                model_name: document.getElementById('defaultModel').value
+            };
+
+            fetch('/api/test_llm_connection', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    resultDiv.className = 'test-result success';
+                    resultDiv.textContent = '✅ ' + result.message;
+                } else {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = '❌ ' + result.message;
+                }
+            })
+            .catch(error => {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = '❌ 测试失败: ' + error.message;
+            });
+        }
+
+        // 测试MySQL连接
+        function testMySQLConnection() {
+            const resultDiv = document.getElementById('mysqlTestResult');
+            const initButton = document.getElementById('initDbButton');
+            resultDiv.className = 'test-result';
+            resultDiv.innerHTML = '<div class="loading"></div> 正在测试MySQL连接...';
+            resultDiv.classList.remove('hidden');
+            initButton.classList.add('hidden');
+
+            const data = {
+                host: document.getElementById('dbHost').value,
+                port: document.getElementById('dbPort').value,
+                user: document.getElementById('dbUser').value,
+                password: document.getElementById('dbPassword').value,
+                database: document.getElementById('dbName').value
+            };
+
+            fetch('/api/test_mysql_connection', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    if (result.warning) {
+                        resultDiv.className = 'test-result warning';
+                        resultDiv.textContent = '⚠️ ' + result.message;
+                        initButton.classList.remove('hidden');
+                    } else {
+                        resultDiv.className = 'test-result success';
+                        resultDiv.textContent = '✅ ' + result.message;
+                    }
+                } else {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = '❌ ' + result.message;
+                }
+            })
+            .catch(error => {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = '❌ 测试失败: ' + error.message;
+            });
+        }
+
+        // 初始化数据库
+        function initDatabase() {
+            if (!confirm('确认要初始化数据库吗?这将创建数据库和表结构。')) {
+                return;
+            }
+
+            const resultDiv = document.getElementById('mysqlTestResult');
+            resultDiv.className = 'test-result';
+            resultDiv.innerHTML = '<div class="loading"></div> 正在初始化数据库...';
+
+            const data = {
+                host: document.getElementById('dbHost').value,
+                port: document.getElementById('dbPort').value,
+                user: document.getElementById('dbUser').value,
+                password: document.getElementById('dbPassword').value,
+                database: document.getElementById('dbName').value
+            };
+
+            fetch('/api/init_database', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    resultDiv.className = 'test-result success';
+                    resultDiv.textContent = '✅ ' + result.message;
+                    document.getElementById('initDbButton').classList.add('hidden');
+                } else {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = '❌ ' + result.message;
+                }
+            })
+            .catch(error => {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = '❌ 初始化失败: ' + error.message;
+            });
+        }
+
+        // 保存配置
+        document.getElementById('configForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const alertDiv = document.getElementById('configAlert');
+            alertDiv.className = 'alert';
+            alertDiv.style.margin = '0 40px 0 40px';
+            alertDiv.innerHTML = '<div class="loading"></div> 正在保存配置...';
+            alertDiv.classList.remove('hidden');
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+
+            fetch('/api/save_config', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alertDiv.className = 'alert success';
+                    alertDiv.textContent = '✅ ' + result.message;
+                    setTimeout(() => {
+                        hideConfigForm();
+                        runHealthCheck();
+                    }, 1500);
+                } else {
+                    alertDiv.className = 'alert error';
+                    alertDiv.textContent = '❌ ' + result.message;
+                }
+            })
+            .catch(error => {
+                alertDiv.className = 'alert error';
+                alertDiv.textContent = '❌ 保存失败: ' + error.message;
+            });
+        });
+
+        // 进入主系统
+        function goToMain() {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

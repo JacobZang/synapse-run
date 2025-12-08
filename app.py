@@ -34,6 +34,22 @@ except ImportError as e:
     print(f"训练数据路由导入失败: {e}")
     TRAINING_DATA_AVAILABLE = False
 
+# 导入配置路由
+try:
+    from routes.setup import setup_bp
+    SETUP_AVAILABLE = True
+except ImportError as e:
+    print(f"配置路由导入失败: {e}")
+    SETUP_AVAILABLE = False
+
+# 导入健康检查
+try:
+    from utils.health_check import run_health_check
+    HEALTH_CHECK_AVAILABLE = True
+except ImportError as e:
+    print(f"健康检查模块导入失败: {e}")
+    HEALTH_CHECK_AVAILABLE = False
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Dedicated-to-creating-a-concise-and-versatile-public-opinion-analysis-platform'
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -51,6 +67,13 @@ if TRAINING_DATA_AVAILABLE:
     print("训练数据管理接口已注册: /training")
 else:
     print("训练数据路由不可用，跳过接口注册")
+
+# 注册配置管理 Blueprint
+if SETUP_AVAILABLE:
+    app.register_blueprint(setup_bp)
+    print("配置管理接口已注册: /setup")
+else:
+    print("配置路由不可用，跳过接口注册")
 
 # 设置UTF-8编码环境
 os.environ['PYTHONIOENCODING'] = 'utf-8'
@@ -477,6 +500,17 @@ atexit.register(cleanup_processes)
 @app.route('/')
 def index():
     """主页"""
+    # 启动时检查配置状态
+    if HEALTH_CHECK_AVAILABLE:
+        try:
+            health_results = run_health_check()
+            # 如果配置未完成,重定向到配置页面
+            if health_results['overall_status'] == 'needs_config':
+                from flask import redirect, url_for
+                return redirect(url_for('setup.setup_page'))
+        except Exception as e:
+            print(f"健康检查失败: {e}")
+
     return render_template('index.html')
 
 @app.route('/api/status')

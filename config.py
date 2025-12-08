@@ -7,11 +7,11 @@ Synapse Run 配置文件
 # ============================== 数据库配置 ==============================
 # MySQL数据库连接配置
 # 请根据您的实际MySQL配置修改以下参数
-DB_HOST = "localhost"           # 数据库主机地址,如 "localhost" 或 "127.0.0.1"
-DB_PORT = 3306                  # 数据库端口,默认3306
-DB_USER = "your_db_username"    # 数据库用户名
-DB_PASSWORD = "your_db_password"  # 数据库密码
-DB_NAME = "traningData"         # 数据库名称(建议保持此名称)
+DB_HOST = "localhost" # 数据库主机地址,如 "localhost" 或 "127.0.0.1"
+DB_PORT = 3306 # 数据库端口,默认3306
+DB_USER = "" # 数据库用户名
+DB_PASSWORD = "" # 数据库密码
+DB_NAME = "traningData" # 数据库名称(建议保持此名称)
 DB_CHARSET = "utf8mb4"          # 字符集,建议使用utf8mb4
 
 
@@ -30,12 +30,12 @@ DB_CHARSET = "utf8mb4"          # 字符集,建议使用utf8mb4
 # 申请地址: https://dashscope.aliyun.com/
 
 # 统一API配置
-LLM_API_KEY = "your_qwen_api_key_here"
+LLM_API_KEY = ""
 LLM_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 # 模型配置
-DEFAULT_MODEL_NAME = "qwen-plus-latest"  # 用于: InsightEngine, MediaEngine, QueryEngine, ForumHost
-REPORT_MODEL_NAME = "qwen3-max"          # 用于: ReportEngine
+DEFAULT_MODEL_NAME = "qwen-plus-latest" # 用于: InsightEngine, MediaEngine, QueryEngine, ForumHost
+REPORT_MODEL_NAME = "qwen3-max" # 用于: ReportEngine
 
 
 # ============================== 网络工具配置 ==============================
@@ -43,8 +43,8 @@ REPORT_MODEL_NAME = "qwen3-max"          # 用于: ReportEngine
 
 # Tavily Search API - 用于Query Agent的专业知识搜索
 # 申请地址: https://www.tavily.com/
-TAVILY_API_KEY = "your_tavily_api_key_here"
+TAVILY_API_KEY = ""
 
 # Bocha Web Search API - 用于Media Agent的实用信息检索
 # 申请地址: https://open.bochaai.com/
-BOCHA_WEB_SEARCH_API_KEY = "your_bocha_api_key_here"
+BOCHA_WEB_SEARCH_API_KEY = ""
