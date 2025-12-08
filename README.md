@@ -230,7 +230,7 @@ mysql -u root -p
 # 在MySQL命令行中执行
 CREATE DATABASE traningData CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE traningData;
-SOURCE schema/training_tables.sql;
+SOURCE scripts/training_tables.sql;
 EXIT;
 ```
 
