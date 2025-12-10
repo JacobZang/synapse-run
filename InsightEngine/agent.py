@@ -20,7 +20,7 @@ from .nodes import (
     ReportFormattingNode
 )
 from .state import State
-from .tools import TrainingDataDB, DBResponse
+from .tools import create_training_data_search, DBResponse
 from .utils import Config, load_config, format_search_results_for_prompt
 
 
@@ -71,8 +71,8 @@ class SportsScientistAgent:
             os.environ["DB_PORT"] = str(self.config.db_port)
             os.environ["DB_CHARSET"] = self.config.db_charset
         
-        # 初始化搜索工具集
-        self.search_agency = TrainingDataDB()
+        # 初始化搜索工具集 (根据config.py的TRAINING_DATA_SOURCE自动选择)
+        self.search_agency = create_training_data_search()
 
         # 初始化节点
         self._initialize_nodes()
@@ -85,8 +85,14 @@ class SportsScientistAgent:
 
         print(f"Sports Scientist Agent (运动科学家) 已初始化")
         print(f"使用LLM: {self.llm_client.get_model_info()}")
-        print(f"数据源: TrainingDataDB (支持6种训练数据查询工具)")
-        print(f"分析能力: 心率、配速、距离、时长等基础生理指标量化分析")
+        print(f"训练数据源: {self.search_agency.data_source.upper()}")
+        print(f"支持的查询工具: {', '.join(self.search_agency.get_supported_tools())}")
+
+        # 根据数据源输出不同的分析能力描述
+        if self.search_agency.data_source == 'keep':
+            print(f"分析能力: 心率、配速、距离、时长等基础生理指标")
+        elif self.search_agency.data_source == 'garmin':
+            print(f"分析能力: 心率区间、步频步幅、功率、训练效果、训练负荷等专业指标")
     
     def _initialize_llm(self) -> LLMClient:
         """初始化LLM客户端"""

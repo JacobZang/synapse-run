@@ -16,6 +16,39 @@
 
 ## 📢 更新日志
 
+### 2025.12.10 - InsightEngine多数据源工具架构重构
+
+#### 🔧 核心架构升级
+- **多数据源支持**: InsightEngine全面支持Keep和Garmin两种训练数据源的动态切换
+- **工厂模式设计**: 新增`TrainingDataSearchFactory`工厂类,根据`config.py`的`TRAINING_DATA_SOURCE`配置自动创建对应数据源工具
+- **独立数据模型**: Keep和Garmin使用各自独立的数据类,完整保留各数据源的原生字段特性
+
+#### 📦 工具类重构
+- **基类架构** (`base_search.py`): 定义统一的查询接口,所有数据源必须实现6个核心查询方法
+- **Keep工具** (`keep_search.py`): `KeepDataSearch`类,支持Keep数据源的6种查询工具
+- **Garmin工具** (`garmin_search.py`): `GarminDataSearch`类,支持6种基础查询 + 3种专属查询
+  - 基础查询: 最近训练、日期范围、统计数据、距离范围、心率区间、运动类型汇总
+  - Garmin专属: 训练负荷查询、功率区间查询、训练效果分析
+
+#### 🎯 数据类设计
+- **KeepTrainingRecord**: 对应`training_records_keep`表,包含心率数组等Keep特有字段
+- **GarminTrainingRecord**: 对应`training_records_garmin`表,包含40+专业运动指标
+  - 心率指标: 5个心率区间时长统计
+  - 步频步幅: 平均/最大步频、步幅、垂直振幅、触地时间、步数等
+  - 功率指标: 平均/最大/标准化功率、5个功率区间时长
+  - 训练效果: 有氧/无氧训练效果、训练负荷、训练效果标签
+  - 速度与代谢: 速度、卡路里、失水量、强度时长、Body Battery变化
+
+#### 🚀 Agent集成优化
+- **自动工具选择**: `agent.py`启动时自动根据配置创建对应数据源工具
+- **智能提示**: 根据当前数据源显示不同的分析能力描述和支持的查询工具列表
+- **无缝切换**: 仅需修改`config.py`中的`TRAINING_DATA_SOURCE`字段即可切换数据源
+
+#### 📝 代码质量提升
+- **破坏性更新**: 移除向后兼容代码,统一使用`create_training_data_search()`工厂方法
+- **清理冗余**: 删除旧的`training_search.py`,统一到新架构
+- **测试覆盖**: 新增`test_tools.py`测试脚本,覆盖所有核心功能
+
 ### 2025.12.10 - 训练数据导入系统重构与多数据源整合
 
 #### 🔄 核心架构升级

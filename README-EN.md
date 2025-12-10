@@ -16,6 +16,39 @@
 
 ## 📢 Changelog
 
+### 2025.12.10 - InsightEngine Multi-Data-Source Tool Architecture Refactoring
+
+#### 🔧 Core Architecture Upgrade
+- **Multi-Data-Source Support**: InsightEngine fully supports dynamic switching between Keep and Garmin training data sources
+- **Factory Pattern Design**: Added `TrainingDataSearchFactory` to automatically create data source tools based on `TRAINING_DATA_SOURCE` config in `config.py`
+- **Independent Data Models**: Keep and Garmin use separate data classes, fully preserving native field characteristics of each data source
+
+#### 📦 Tool Class Refactoring
+- **Base Architecture** (`base_search.py`): Defines unified query interface, all data sources must implement 6 core query methods
+- **Keep Tool** (`keep_search.py`): `KeepDataSearch` class supporting 6 query tools for Keep data source
+- **Garmin Tool** (`garmin_search.py`): `GarminDataSearch` class supporting 6 basic queries + 3 exclusive queries
+  - Basic Queries: Recent trainings, date range, statistics, distance range, heart rate zone, exercise type summary
+  - Garmin Exclusive: Training load query, power zone query, training effect analysis
+
+#### 🎯 Data Class Design
+- **KeepTrainingRecord**: Maps to `training_records_keep` table, includes Keep-specific fields like heart rate arrays
+- **GarminTrainingRecord**: Maps to `training_records_garmin` table, includes 40+ professional sport metrics
+  - Heart Rate Metrics: 5 heart rate zone duration statistics
+  - Cadence & Stride: Avg/max cadence, stride length, vertical oscillation, ground contact time, total steps, etc.
+  - Power Metrics: Avg/max/normalized power, 5 power zone durations
+  - Training Effect: Aerobic/anaerobic training effect, training load, training effect label
+  - Speed & Metabolism: Speed, calories, sweat loss, intensity duration, Body Battery change
+
+#### 🚀 Agent Integration Optimization
+- **Auto Tool Selection**: `agent.py` automatically creates corresponding data source tool on startup based on config
+- **Smart Prompts**: Displays different analysis capability descriptions and supported query tool lists based on current data source
+- **Seamless Switching**: Only need to modify `TRAINING_DATA_SOURCE` field in `config.py` to switch data sources
+
+#### 📝 Code Quality Improvements
+- **Breaking Changes**: Removed backward compatibility code, unified to use `create_training_data_search()` factory method
+- **Cleanup Redundancy**: Deleted old `training_search.py`, unified to new architecture
+- **Test Coverage**: Added `test_tools.py` test script covering all core functionalities
+
 ### 2025.12.10 - Training Data Import System Refactoring & Multi-Data-Source Integration
 
 #### 🔄 Core Architecture Upgrade
