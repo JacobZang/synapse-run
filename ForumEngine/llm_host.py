@@ -17,7 +17,9 @@ import re
 
 # 添加项目根目录到Python路径以导入config
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import LLM_API_KEY, LLM_BASE_URL, DEFAULT_MODEL_NAME
+
+# 使用统一的配置热重载工具
+from utils.config_reloader import get_config_value
 
 # 添加utils目录到Python路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -50,18 +52,19 @@ class ForumHost:
             base_url: 接口基础地址，默认使用配置文件中的LLM_BASE_URL
             model_name: 使用的LLM模型名称
         """
-        self.api_key = api_key or LLM_API_KEY
+        # 使用配置热重载工具获取最新配置
+        self.api_key = api_key or get_config_value('LLM_API_KEY')
 
         if not self.api_key:
             raise ValueError("未找到LLM API密钥，请在config.py中设置LLM_API_KEY")
 
-        self.base_url = base_url or LLM_BASE_URL
+        self.base_url = base_url or get_config_value('LLM_BASE_URL')
 
         self.client = OpenAI(
             api_key=self.api_key,
             base_url=self.base_url
         )
-        self.model = model_name or DEFAULT_MODEL_NAME  # Use configured model
+        self.model = model_name or get_config_value('DEFAULT_MODEL_NAME', 'qwen-plus-latest')
 
         # Track previous summaries to avoid duplicates
         self.previous_summaries = []

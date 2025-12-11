@@ -28,16 +28,14 @@ except locale.Error:
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from MediaEngine import LogisticsIntelligenceAgent, Config
-from config import (
-    LLM_API_KEY,
-    LLM_BASE_URL,
-    DEFAULT_MODEL_NAME,
-    BOCHA_WEB_SEARCH_API_KEY,
-)
+from utils.config_reloader import reload_config, get_config_snapshot
 
 
 def main():
     """主函数"""
+    # 页面加载时重载配置
+    reload_config(verbose=False)
+
     st.set_page_config(
         page_title="后勤与情报官 - 跑步训练情报收集",
         page_icon="🏃",
@@ -195,9 +193,9 @@ def main():
         auto_query = query_params.get('query', [''])[0]
         auto_search = query_params.get('auto_search', ['false'])[0].lower() == 'true'
 
-    # ----- 配置被硬编码 -----
-    # 强制使用 Gemini
-    model_name = DEFAULT_MODEL_NAME or "qwen-plus-latest"
+    # ----- 从配置热重载工具获取最新配置 -----
+    snapshot = get_config_snapshot()
+    model_name = snapshot.DEFAULT_MODEL_NAME if snapshot else "qwen-plus-latest"
     # 默认高级配置
     max_reflections = 2
     max_content_length = 20000
@@ -233,24 +231,20 @@ def main():
             st.error("请输入研究查询")
             return
 
-        # 由于强制使用Gemini，检查相关的API密钥
-        if not LLM_API_KEY:
+        # 检查配置快照中的API密钥
+        if not snapshot or not snapshot.LLM_API_KEY:
             st.error("请在您的配置文件(config.py)中设置LLM_API_KEY")
             return
-        if not BOCHA_WEB_SEARCH_API_KEY:
+        if not snapshot or not snapshot.BOCHA_WEB_SEARCH_API_KEY:
             st.error("请在您的配置文件(config.py)中设置BOCHA_WEB_SEARCH_API_KEY")
             return
 
-        # 自动使用配置文件中的API密钥
-        engine_key = LLM_API_KEY
-        bocha_key = BOCHA_WEB_SEARCH_API_KEY
-
-        # 创建配置
+        # 创建配置（使用配置快照）
         config = Config(
-            llm_api_key=engine_key,
-            llm_base_url=LLM_BASE_URL,
+            llm_api_key=snapshot.LLM_API_KEY,
+            llm_base_url=snapshot.LLM_BASE_URL,
             llm_model_name=model_name,
-            bocha_api_key=bocha_key,
+            bocha_api_key=snapshot.BOCHA_WEB_SEARCH_API_KEY,
             max_reflections=max_reflections,
             max_content_length=max_content_length,
             output_dir="media_engine_streamlit_reports"

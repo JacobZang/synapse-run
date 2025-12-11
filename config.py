@@ -9,18 +9,18 @@ Synapse Run 配置文件
 # 请根据您的实际MySQL配置修改以下参数
 DB_HOST = "localhost" # 数据库主机地址,如 "localhost" 或 "127.0.0.1"
 DB_PORT = 3306 # 数据库端口,默认3306
-DB_USER = "huangsuxiang" # 数据库用户名
-DB_PASSWORD = "Wodeshijie1.12" # 数据库密码
-DB_NAME = "traningDate" # 数据库名称(建议保持此名称)
+DB_USER = "" # 数据库用户名
+DB_PASSWORD = "" # 数据库密码
+DB_NAME = "traningData" # 数据库名称(建议保持此名称)
 DB_CHARSET = "utf8mb4"          # 字符集,建议使用utf8mb4
 
 # 训练数据源配置
 # 支持的数据源: 'keep' (Keep运动APP) 或 'garmin' (Garmin设备)
-TRAINING_DATA_SOURCE = "garmin"
+TRAINING_DATA_SOURCE = "keep"
 
 # Garmin账户配置(仅当TRAINING_DATA_SOURCE为garmin时需要)
 GARMIN_EMAIL = ""
-GARMIN_PASSWORD = ""
+GARMIN_PASSWORD = "W"
 GARMIN_IS_CN = True  # True: 中国区账户, False: 国际区账户
 
 

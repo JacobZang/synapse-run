@@ -32,9 +32,13 @@ class TheoryExpertAgent:
         Args:
             config: 配置对象,如果不提供则自动加载
         """
+        # 使用配置热重载工具
+        from utils.config_reloader import reload_config, get_config_value
+        reload_config(verbose=False)
+
         # 加载配置
         self.config = config or load_config()
-        os.environ["TAVILY_API_KEY"] = self.config.tavily_api_key or ""
+        os.environ["TAVILY_API_KEY"] = get_config_value('TAVILY_API_KEY', '') or self.config.tavily_api_key or ""
 
         # 初始化LLM客户端
         self.llm_client = self._initialize_llm()

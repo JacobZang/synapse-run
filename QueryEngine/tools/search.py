@@ -80,6 +80,25 @@ RUNNING_SCIENCE_WHITELIST = [
 ]
 
 
+# --- 内容过滤黑名单 (防止敏感内容) ---
+
+CONTENT_BLACKLIST_KEYWORDS = [
+    # 成人内容关键词
+    "porn", "sex", "xxx", "adult", "nude", "裸", "色情", "成人",
+    # 赌博相关
+    "casino", "gambling", "赌博", "博彩",
+    # 其他敏感内容
+    "dating", "约会", "交友",
+]
+
+# 可疑域名黑名单 (已知的非学术站点)
+DOMAIN_BLACKLIST = [
+    "xvideos.com", "pornhub.com", "redtube.com",  # 成人网站
+    "bet365.com", "888casino.com",  # 赌博网站
+    # 可以继续添加发现的问题域名
+]
+
+
 # --- 学术查询增强关键词库 ---
 
 ACADEMIC_ENHANCEMENT_KEYWORDS = {
@@ -95,6 +114,35 @@ ACADEMIC_ENHANCEMENT_KEYWORDS = {
 }
 
 
+def is_content_safe(text: str, url: str = "") -> bool:
+    """
+    检查内容是否安全(不包含敏感信息)
+
+    Args:
+        text: 要检查的文本内容
+        url: URL地址
+
+    Returns:
+        True表示安全,False表示包含敏感内容
+    """
+    if not text:
+        return True
+
+    # 检查URL黑名单
+    if url:
+        for blacklisted_domain in DOMAIN_BLACKLIST:
+            if blacklisted_domain in url.lower():
+                return False
+
+    # 检查内容关键词黑名单
+    text_lower = text.lower()
+    for keyword in CONTENT_BLACKLIST_KEYWORDS:
+        if keyword in text_lower:
+            return False
+
+    return True
+
+
 def enhance_query_for_academic_search(original_query: str) -> str:
     """
     增强搜索查询,强制搜索引擎进入"学术模式"
@@ -103,6 +151,7 @@ def enhance_query_for_academic_search(original_query: str) -> str:
     1. 检测查询中的主题类别
     2. 添加相关的英文学术术语
     3. 添加通用的学术关键词(study, research, protocol等)
+    4. 添加排除敏感内容的关键词
 
     Args:
         original_query: 原始用户查询
@@ -129,6 +178,9 @@ def enhance_query_for_academic_search(original_query: str) -> str:
     # 合并:原查询 + 匹配的术语 + 基础术语
     all_terms = matched_keywords[:3] + base_academic_terms[:2]
     enhanced_query = f"{original_query} {' '.join(all_terms)}"
+
+    # 添加排除敏感内容的操作符(Google搜索语法)
+    enhanced_query += " -porn -sex -adult -casino -gambling"
 
     return enhanced_query
 
@@ -182,28 +234,54 @@ class TavilyNewsAgency:
 
     @with_graceful_retry(SEARCH_API_RETRY_CONFIG, default_return=TavilyResponse(query="搜索失败"))
     def _search_internal(self, **kwargs) -> TavilyResponse:
-        """内部通用的搜索执行器"""
+        """内部通用的搜索执行器,包含内容安全过滤"""
         try:
             kwargs['topic'] = 'general'
             api_params = {k: v for k, v in kwargs.items() if v is not None}
             response_dict = self._client.search(**api_params)
 
-            search_results = [
-                SearchResult(
-                    title=item.get('title'),
-                    url=item.get('url'),
-                    content=item.get('content'),
-                    score=item.get('score'),
-                    raw_content=item.get('raw_content'),
-                    published_date=item.get('published_date')
-                ) for item in response_dict.get('results', [])
-            ]
+            # 过滤掉不安全的搜索结果
+            filtered_results = []
+            blocked_count = 0
 
-            image_results = [ImageResult(url=item.get('url'), description=item.get('description')) for item in response_dict.get('images', [])]
+            for item in response_dict.get('results', []):
+                url = item.get('url', '')
+                title = item.get('title', '')
+                content = item.get('content', '')
+
+                # 检查URL、标题和内容是否安全
+                if (is_content_safe(title, url) and
+                    is_content_safe(content, url)):
+                    filtered_results.append(
+                        SearchResult(
+                            title=title,
+                            url=url,
+                            content=content,
+                            score=item.get('score'),
+                            raw_content=item.get('raw_content'),
+                            published_date=item.get('published_date')
+                        )
+                    )
+                else:
+                    blocked_count += 1
+                    print(f"⚠️ 已过滤不安全内容: {url}")
+
+            if blocked_count > 0:
+                print(f"✅ 内容过滤: 已拦截 {blocked_count} 条潜在敏感内容")
+
+            # 图片结果也进行过滤
+            image_results = []
+            for item in response_dict.get('images', []):
+                url = item.get('url', '')
+                desc = item.get('description', '')
+                if is_content_safe(desc, url):
+                    image_results.append(ImageResult(url=url, description=desc))
 
             return TavilyResponse(
-                query=response_dict.get('query'), answer=response_dict.get('answer'),
-                results=search_results, images=image_results,
+                query=response_dict.get('query'),
+                answer=response_dict.get('answer'),
+                results=filtered_results,
+                images=image_results,
                 response_time=response_dict.get('response_time')
             )
         except Exception as e:
@@ -220,13 +298,19 @@ class TavilyNewsAgency:
         返回AI生成的详细摘要答案和最多20条最相关的搜索结果。
         适用于需要全面了解中长跑训练理论、运动科学原理的场景。
 
+        安全保护机制:
+        1. 白名单域名优先(30+权威学术和专业网站)
+        2. 搜索查询添加排除敏感内容操作符
+        3. 结果多层过滤:URL黑名单 + 内容关键词检测
+        4. 自动拦截并记录被过滤的不安全内容
+
         Args:
             query: 搜索查询,建议使用中长跑专业术语
             enable_query_enhancement: 是否启用学术查询增强(默认True)
             use_whitelist: 是否使用学术白名单过滤域名(默认True)
 
         Returns:
-            TavilyResponse对象,包含搜索结果和AI摘要
+            TavilyResponse对象,包含经过安全过滤的搜索结果和AI摘要
         """
         # 查询增强
         if enable_query_enhancement:

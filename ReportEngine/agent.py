@@ -112,10 +112,14 @@ class ReportAgent:
     def __init__(self, config: Optional[Config] = None):
         """
         初始化Report Agent
-        
+
         Args:
             config: 配置对象，如果不提供则自动加载
         """
+        # 使用配置热重载工具
+        from utils.config_reloader import reload_config
+        reload_config(verbose=False)
+
         # 加载配置
         self.config = config or load_config()
         

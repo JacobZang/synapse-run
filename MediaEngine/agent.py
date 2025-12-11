@@ -39,10 +39,15 @@ class LogisticsIntelligenceAgent:
         Args:
             config: 配置对象，如果不提供则自动加载
         """
+        # 使用配置热重载工具
+        from utils.config_reloader import reload_config, get_config_value
+        reload_config(verbose=False)
+
         # 加载配置
         self.config = config or load_config()
-        os.environ["BOCHA_API_KEY"] = self.config.bocha_api_key or ""
-        os.environ["BOCHA_WEB_SEARCH_API_KEY"] = self.config.bocha_api_key or ""
+        bocha_key = get_config_value('BOCHA_WEB_SEARCH_API_KEY', '') or self.config.bocha_api_key or ""
+        os.environ["BOCHA_API_KEY"] = bocha_key
+        os.environ["BOCHA_WEB_SEARCH_API_KEY"] = bocha_key
         
         # 初始化LLM客户端
         self.llm_client = self._initialize_llm()
