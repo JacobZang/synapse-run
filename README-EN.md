@@ -6,155 +6,32 @@
 
 **Intelligent Running Training Assistant | Multi-Agent Collaborative System**
 
-[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html) [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html) [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/) [![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](https://github.com/zephyr4123/synapse-run)
 
-[English](./README-EN.md) | [中文文档](./README.md)
+[English](./README-EN.md) | [中文文档](./README.md) | [Changelog](./docs/updateLog.md)
 
 </div>
 
 ---
 
-## 📢 Changelog
+## 🎉 v1.0.0 Official Release
 
-### 2025.12.10 - InsightEngine ORM Architecture Upgrade & SQL Injection Protection
+**Release Date**: December 2025
 
-#### 🔒 Core Security Upgrade
-- **ORM Architecture Refactoring**: InsightEngine fully migrated from raw SQL queries to SQLAlchemy ORM, fundamentally eliminating SQL injection risks
-- **Unified Session Management**: Added `db_session_manager` singleton pattern to manage database connections, ensuring thread safety and efficient resource utilization
-- **Automatic Configuration Loading**: Database configuration directly imported from `config.py`, eliminating environment variable dependencies and simplifying deployment
+### ✨ Major Updates
 
-#### 🏗️ Data Model Standardization
-- **ORM Model Definition** (`db_models.py`):
-  - `TrainingRecordKeep`: SQLAlchemy model for Keep data source, mapping `training_records_keep` table
-  - `TrainingRecordGarmin`: SQLAlchemy model for Garmin data source, mapping `training_records_garmin` table
-  - Complete field type definitions, supporting IDE intelligent hints and type-safe checking
-- **Declarative Base Class**: Using `declarative_base()` for unified ORM base class, following SQLAlchemy best practices
+1. **🏃 Extended Garmin Data Support**: Fully compatible with Garmin Connect data source, maintaining extensibility for future integration of more data sources
+2. **🎨 Visual Configuration Interface**: First-time use provides health check and visual configuration process, no need to manually edit config.py, one-click configuration of API keys and database
+3. **📊 Intelligent Data Source Adaptation**: Dynamically adjusts LLM prompts and toolsets based on `TRAINING_DATA_SOURCE` configuration (Garmin has richer tools with more physiological metrics)
+4. **📈 Dual Data Backend Support**: `/training` monitoring page supports both Keep and Garmin modes
+   - **Keep Mode**: Provides full CRUD functionality, manually manage training data
+   - **Garmin Mode**: One-click sync button, automatically pulls latest data from Garmin Connect
 
-#### 🔧 Tool Class ORM Rewriting
-- **Keep Tool** (`keep_search.py`):
-  - All query methods rewritten from `cursor.execute(sql)` to `session.query(TrainingRecordKeep).filter(...)`
-  - Using ORM expressions to build complex query conditions, code readability improved by 40%
-  - Statistical aggregation using `func.count()`, `func.sum()`, `func.avg()` and other SQLAlchemy functions
-- **Garmin Tool** (`garmin_search.py`):
-  - 9 query methods fully ORM-ized, including basic queries and Garmin-exclusive queries
-  - Complex conditions using `and_()`, `or_()`, `case()` and other combination expressions
-  - Advanced queries like training load and power zones using ORM aggregation and condition building
+### 🔧 Configuration Optimization
 
-#### 📦 Session Management Optimization
-- **Lazy-Loading Mechanism** (`db_session_manager`):
-  - Automatically initializes database engine on first query, avoiding startup configuration check failures
-  - Context manager `get_session()` ensures proper session closure, preventing connection leaks
-  - Thread-safe engine singleton supporting multi-threaded concurrent queries
-- **Connection Pool Configuration**:
-  - Default pool size 5, max overflow 10, connection recycle time 3600 seconds
-  - Supports dynamic adjustment of connection pool parameters through `config.py`
-
-#### 🚀 Performance & Code Quality Improvements
-- **Query Performance**: ORM-compiled SQL comparable to hand-written SQL performance, pre-compilation mechanism avoids repeated parsing
-- **Code Simplification**: Removed all manual SQL splicing and parameterization logic, code reduced by approximately 30%
-- **Type Safety**: All queries return ORM objects, supporting attribute access with full IDE intelligent hints
-- **Error Handling**: Unified exception capture and logging, clearer database error tracking
-
-#### 📝 Breaking Changes
-- **Removed Raw SQL**: Completely deleted `pymysql.connect()` and `cursor.execute()` calls
-- **Unified Interface**: All tool methods return type unchanged (`DBResponse`), upper layer Agent requires no modification
-- **Configuration Simplification**: No longer requires `pymysql.cursors.DictCursor` and other low-level configurations
-
-#### 🎯 Security Compliance
-- **Anti-Injection Design**: ORM parameterized queries with automatic user input escaping, compliant with OWASP security standards
-- **Least Privilege**: Database connection only requires SELECT permission, reducing potential attack surface
-- **Audit Trail**: All queries unified through ORM logs, facilitating security audit and monitoring
-
-### 2025.12.10 - InsightEngine Multi-Data-Source Tool Architecture Refactoring
-
-#### 🔧 Core Architecture Upgrade
-- **Multi-Data-Source Support**: InsightEngine fully supports dynamic switching between Keep and Garmin training data sources
-- **Factory Pattern Design**: Added `TrainingDataSearchFactory` to automatically create data source tools based on `TRAINING_DATA_SOURCE` config in `config.py`
-- **Independent Data Models**: Keep and Garmin use separate data classes, fully preserving native field characteristics of each data source
-
-#### 📦 Tool Class Refactoring
-- **Base Architecture** (`base_search.py`): Defines unified query interface, all data sources must implement 6 core query methods
-- **Keep Tool** (`keep_search.py`): `KeepDataSearch` class supporting 6 query tools for Keep data source
-- **Garmin Tool** (`garmin_search.py`): `GarminDataSearch` class supporting 6 basic queries + 3 exclusive queries
-  - Basic Queries: Recent trainings, date range, statistics, distance range, heart rate zone, exercise type summary
-  - Garmin Exclusive: Training load query, power zone query, training effect analysis
-
-#### 🎯 Data Class Design
-- **KeepTrainingRecord**: Maps to `training_records_keep` table, includes Keep-specific fields like heart rate arrays
-- **GarminTrainingRecord**: Maps to `training_records_garmin` table, includes 40+ professional sport metrics
-  - Heart Rate Metrics: 5 heart rate zone duration statistics
-  - Cadence & Stride: Avg/max cadence, stride length, vertical oscillation, ground contact time, total steps, etc.
-  - Power Metrics: Avg/max/normalized power, 5 power zone durations
-  - Training Effect: Aerobic/anaerobic training effect, training load, training effect label
-  - Speed & Metabolism: Speed, calories, sweat loss, intensity duration, Body Battery change
-
-#### 🚀 Agent Integration Optimization
-- **Auto Tool Selection**: `agent.py` automatically creates corresponding data source tool on startup based on config
-- **Smart Prompts**: Displays different analysis capability descriptions and supported query tool lists based on current data source
-- **Seamless Switching**: Only need to modify `TRAINING_DATA_SOURCE` field in `config.py` to switch data sources
-
-#### 📝 Code Quality Improvements
-- **Breaking Changes**: Removed backward compatibility code, unified to use `create_training_data_search()` factory method
-- **Cleanup Redundancy**: Deleted old `training_search.py`, unified to new architecture
-- **Test Coverage**: Added `test_tools.py` test script covering all core functionalities
-
-### 2025.12.10 - Training Data Import System Refactoring & Multi-Data-Source Integration
-
-#### 🔄 Core Architecture Upgrade
-- **Unified Import Module**: Merged `import_training_data.py` and `import_garmin_data.py` into a unified module `training_data_importer.py`
-- **API-Focused Design**: Removed all CLI command-line functionality, focused on backend API interfaces, improving system architecture purity
-- **Base Class Architecture**: Added `BaseImporter` base class to unify database engine initialization logic, facilitating expansion to more data sources
-
-#### 📦 Importer Refactoring
-- **Keep Importer** (`KeepDataImporter`): Excel file import supporting .xlsx/.xls/.csv formats, batch submission optimization (100 records/batch)
-- **Garmin Importer** (`GarminDataImporter`): Garmin Connect online data fetching, auto-login + activity filtering + batch import
-- **Lazy-Loading Engine**: Database engine uses lazy-loading mode, reads latest config directly from config.py, avoiding importlib.reload uncertainty
-
-#### 🎨 Web Interface Enhancement
-- **Visual Data Source Selection**: Added data source selection interface supporting visual switching between Keep and Garmin data sources
-- **Garmin Online Import**: Input Garmin account credentials directly in web interface, one-click fetch running data (supports China/International accounts)
-- **Login Test Functionality**: Support Garmin login testing, verify account availability before data import
-- **Import Result Feedback**: Real-time display of import statistics (success/failure counts), providing detailed operation feedback
-
-#### 🗄️ Database Architecture Optimization
-- **Multi-Data-Source Support**: Added `TrainingRecordManager` class supporting dynamic switching between Keep and Garmin training data formats
-- **Garmin Data Model**: Added `TrainingRecordGarmin` table with 40+ professional sport metrics (heart rate zones, power zones, cadence/stride, training load, etc.)
-- **Field Mapping System**: Implemented intelligent field mapping mechanism to automatically adapt field differences between data sources (e.g., Keep's `start_time` ↔ Garmin's `start_time_gmt`)
-- **Data Isolation**: Keep and Garmin data stored in separate tables without interference, supporting independent statistics views
-
-#### 🔌 API Interface Extension
-- **Data Source Management**: Added `/api/test_garmin_login` endpoint supporting Garmin account login testing
-- **Online Import**: Added `/api/import_garmin_data` endpoint supporting Garmin Connect online data fetching and import
-- **Configuration Management**: Optimized `/api/save_config` endpoint to support saving Garmin account credentials to configuration file
-- **Excel Upload**: Optimized `/api/upload_training_excel` endpoint to use unified new importer architecture
-
-#### 📝 Technical Improvements
-- **Clear Naming**: Keep imports use `KeepDataImporter`, Garmin imports use `GarminDataImporter`, semantically clear
-- **Error Handling**: Enhanced Garmin login exception capture, providing clear error messages
-- **Code Simplification**: Removed duplicate database engine creation logic, unified into BaseImporter base class
-- **Import Mode**: Unified adoption of overwrite mode (truncate_first=True) to avoid data duplication
-
-### 2025.12.8 - Training Data Import Fix
-- **🔧 Database Connection Fix**: Fixed database authentication failure during Excel training data import
-- **⚡ Configuration Reading Optimization**: Removed unreliable `importlib.reload()` mechanism, now builds database engine directly from config.py
-- **✅ Stability Improvement**: Importers now accurately read latest database configuration on each initialization, avoiding environment variable interference
-- **📊 Web Upload Guarantee**: Ensures database connection stability when uploading Excel files through web interface (/setup)
-
-### 2025.12.8 - Visual Configuration System Launch
-- **🎨 Visual Configuration Interface**: New web-based configuration page (`/setup`) supporting LLM API, Search API, and MySQL database visual configuration
-- **✅ Intelligent Health Check**: Automatic 8-item health check on system startup, redirects to configuration page if incomplete
-- **🔧 Real-time Connection Testing**: Support real-time testing of LLM API and MySQL connections before configuration
-- **🗄️ One-click Database Initialization**: Automatically create database and table structure with a single click, no manual SQL script execution needed
-- **📱 Responsive Design**: Modern UI with Morandi color scheme, horizontal layout displaying all features in one screen
-- **⚠️ Important Notice**: First-time system startup automatically redirects to configuration page, normal use after completing configuration
-
-### 2025.12.8 - Configuration Management Refactoring
-- **🔧 Unified Configuration Variables**: Unified all Agent LLM configurations to `LLM_API_KEY`, `LLM_BASE_URL`, `DEFAULT_MODEL_NAME`, `REPORT_MODEL_NAME` (4 variables)
-- **📝 Simplified Configuration**: Except ReportAgent using `qwen3-max`, all other Agents use `qwen-plus-latest`
-- **⚠️ Important Notice**: If you were using the old configuration, please refer to [Configuration](#-configuration) section to update your `config.py` file
-
-### 2025.12.8 - Database Script Fix
-- Added missing `training_tables.sql` and adjusted `import_traning_data.py` file path, both now in `scripts` folder
+- Simplified data import process, supports Excel import (Keep) and email authorization sync (Garmin)
+- Optimized health check mechanism, automatically detects API and database configuration at startup
+- Enhanced error prompts, provides detailed guidance when configuration fails
 
 ---
 
@@ -165,7 +42,7 @@
 ### 🎯 Core Advantages
 
 - **🧠 Multi-Agent Collaborative Architecture**: Four professional agents collaborate deeply through a forum mechanism, avoiding the limitations of single-model thinking
-- **📊 Data-Driven Training Analysis**: Deep mining of personal training database (supports Keep data import), combined with professional internet resources, generates scientific training recommendations
+- **📊 Data-Driven Training Analysis**: Deep mining of personal training database (supports Keep & Garmin data), combined with professional internet resources, generates scientific training recommendations
 - **🎨 Intelligent Report Generation**: 20+ professional report templates, dynamically selecting the most suitable template, multi-round optimization for high-quality analytical reports
 - **🔌 Pure Python Lightweight Design**: Modular architecture, easy to extend and customize, supports any OpenAI-compatible LLM interface
 
@@ -195,14 +72,14 @@ Deeply customized and optimized for middle and long-distance running training sc
 | Category | Specific Content |
 |----------|------------------|
 | **Domain Adaptation** | Removed MindSpider crawler and sentiment analysis modules, focused on training data analysis |
-| **User Experience** | Comprehensively upgraded UI interface, provided /training route for one-click training data management (supports Keep format import) |
+| **User Experience** | Comprehensively upgraded UI interface, provided /training route for one-click training data management (supports Keep & Garmin) |
 | **Search Optimization** | Optimized Tavily search configuration, added whitelist of professional running websites, improved search accuracy |
 | **Professional Templates** | Added 20+ specialized running report templates (training theory, nutrition, injury recovery, etc.) |
 | **API Unification** | Fully replaced with Qwen series APIs to ensure consistency in forum collaboration response speed |
 | **Prompt Optimization** | All agent prompts fully adapted to running scenarios, injected dynamic time to prevent LLM hallucination |
 | **Database Refactoring** | Comprehensively adjusted database ORM and tools in InsightAgent, perfectly adapted to running training data structure |
 | **Tool Simplification** | Simplified QueryAgent tool calls, only retained deep_search_news for academic literature retrieval, reduced redundancy |
-| **Utility Scripts** | Provided import_training_data.py (data import), clear_reports.py (clear reports) and other utility scripts |
+| **Utility Scripts** | Provided training_data_importer.py (data import), clear_reports.sh (clear reports) and other utility scripts |
 
 ---
 
@@ -216,7 +93,7 @@ The system consists of four core agents, each with independent toolsets, prompt 
 |-------|------|-----------|------------------|----------------------|
 | **Query Agent** | Theory Expert | Tavily API (news/web search) | Qwen-Plus-Latest | Running training theory, academic literature retrieval, professional knowledge search |
 | **Media Agent** | Logistics Intelligence | Bocha search, structured data cards | Qwen-Plus-Latest | Race registration, weather forecast, equipment prices, route slopes and other practical intelligence |
-| **Insight Agent** | Data Analyst | Training database query tools | Qwen-Plus-Latest | Historical training data mining, statistical analysis, trend prediction |
+| **Insight Agent** | Data Analyst | Training database query tools (Keep/Garmin) | Qwen-Plus-Latest | Historical training data mining, statistical analysis, trend prediction |
 | **Report Agent** | Report Generator | Template selection engine, HTML generator | Qwen3-Max | Intelligent template selection, multi-round report optimization, professional content generation |
 
 ### 🔄 System Architecture Diagram
@@ -276,120 +153,202 @@ All agents follow the same modular architecture design:
 
 ## 🚀 Quick Start
 
-### System Requirements
+### Prerequisites
 
-| Item | Requirement |
-|------|------------|
-| **Operating System** | Windows / Linux / MacOS |
-| **Python Version** | 3.9 or higher |
-| **Package Manager** | Conda (Anaconda or Miniconda recommended) |
-| **Database** | MySQL 8.0+ |
-| **Memory** | 4GB+ recommended |
-| **Disk Space** | At least 2GB available |
+Before starting to use Synapse Run, please ensure the following preparations are completed:
 
-### 📦 Installation Steps
+#### 【1】Environment Configuration
 
-#### 1. Clone the Project
+| Environment | Requirement | Installation Tutorial |
+|------------|------------|---------------------|
+| **VSCode** | Latest stable version | [Tutorial](https://blog.csdn.net/qq_52102933/article/details/120387246) |
+| **MySQL** | 8.0+ | [Tutorial](https://blog.csdn.net/2509_94228395/article/details/155399232) |
+| **Git** | Latest version (optional) | [Tutorial](https://blog.csdn.net/mukes/article/details/115693833) |
+| **Python** | 3.9+ | Recommended to use Conda environment management |
 
-**Clone from GitHub**:
+#### 【2】Apply for API Keys
+
+| API Service | Purpose | Application URL |
+|------------|---------|----------------|
+| **Alibaba Cloud LLM API** | Core LLM service | https://dashscope.aliyun.com/ |
+| **Tavily Search API** | Academic literature & theory retrieval | https://www.tavily.com/ |
+| **Bocha Crawler API** | Practical intelligence collection (must purchase ai_search version) | https://open.bochaai.com/ |
+
+⚠️ **Note**: Bocha API must purchase **ai_search version**, web_search version is not applicable to this system
+
+#### 【3】Data Preparation
+
+Choose the corresponding data preparation method according to your sports tracking device:
+
+**📱 Keep Users**:
+1. Open Keep App
+2. Go to `Settings` → `Personal Collection List` → `Personal Information Download`
+3. Fill in receiving email
+4. Wait about 10 minutes, complete Excel table will be sent to your email
+
+<div align="center">
+<img src="static/image/keepEmail.png" alt="Keep Data Export Email" width="60%">
+<p><i>Keep Data Export Email Example</i></p>
+</div>
+
+**⌚ Garmin Users**:
+- Prepare your Garmin Connect account email and password
+- No additional preparation needed, system will automatically sync data
+
+---
+
+### 📦 Deployment Process
+
+#### 1️⃣ Clone Project
+
 ```bash
+# Clone from GitHub (recommended)
 git clone https://github.com/zephyr4123/synapse-run.git
 cd synapse-run
-```
 
-**Or clone from Gitee**:
-```bash
+# Or clone from Gitee (domestic mirror)
 git clone https://gitee.com/zephyr123_3/synapse-run.git
 cd synapse-run
+
+# Or directly download compressed package and extract
 ```
 
-#### 2. Create Conda Environment
+#### 2️⃣ Install Dependencies
 
 ```bash
-# Create independent Python environment
+# If using Conda environment (recommended)
 conda create -n synapse_run python=3.11
 conda activate synapse_run
-```
+pip install -r requirements.txt
 
-#### 3. Install Dependencies
-
-```bash
-# Install all dependencies
+# Or use system Python
 pip install -r requirements.txt
 ```
 
-#### 4. Configure the System
-
-##### 4.1 Configure API Keys
-
-Edit the `config.py` file in the project root directory and fill in your API keys:
-
-```python
-# ============================== Database Configuration ==============================
-DB_HOST = "localhost"
-DB_PORT = 3306
-DB_USER = "your_username"
-DB_PASSWORD = "your_password"
-DB_NAME = "traningData"  # Database name
-DB_CHARSET = "utf8mb4"
-
-# ============================== LLM Configuration ==============================
-# Unified LLM configuration - All Agents share the same API Key and Base URL
-# Apply at: https://dashscope.aliyun.com/
-
-# Unified API Configuration
-LLM_API_KEY = "your_qwen_api_key"
-LLM_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-
-# Model Configuration
-DEFAULT_MODEL_NAME = "qwen-plus-latest"  # For: InsightEngine, MediaEngine, QueryEngine, ForumHost
-REPORT_MODEL_NAME = "qwen3-max"          # For: ReportEngine (strong coding ability)
-
-# ============================== Network Tools Configuration ==============================
-# Tavily API (Apply at: https://www.tavily.com/)
-TAVILY_API_KEY = "your_tavily_api_key"
-
-# Bocha API (Apply at: https://open.bochaai.com/)
-BOCHA_WEB_SEARCH_API_KEY = "your_bocha_api_key"
-```
-
-##### 4.2 Initialize Database
+#### 3️⃣ Start System
 
 ```bash
-# Login to MySQL and create database
-mysql -u root -p
-
-# Execute in MySQL command line
-CREATE DATABASE traningData CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE traningData;
-SOURCE schema/training_tables.sql;
-EXIT;
-```
-
-#### 5. Start the System
-
-##### 5.1 Complete System Startup (Recommended)
-
-```bash
-# Activate conda environment
+# Activate environment (if using Conda)
 conda activate synapse_run
 
 # Start main application
 python app.py
 ```
 
-After the system starts, visit **http://localhost:5000** in your browser to use all features.
+After startup, browser will automatically open **http://localhost:5000**
 
-##### 5.2 Single Agent Debug Mode (For Development Debugging)
+---
+
+### 🎯 First-Time Use Configuration
+
+#### 【1】Health Check
+
+On first startup, the system will automatically perform a health check. If configuration is missing or incorrect, it will automatically redirect to the configuration page:
+
+<div align="center">
+<img src="static/image/healthCheck.png" alt="System Health Check" width="80%">
+<p><i>System Health Check - Automatically detect API and database configuration</i></p>
+</div>
+
+#### 【2】Visual Configuration
+
+**Configure API Keys**:
+
+<div align="center">
+<img src="static/image/apiSetting.png" alt="API Configuration Interface" width="80%">
+<p><i>One-click configuration of all API keys</i></p>
+</div>
+
+**Configure MySQL Database**:
+
+<div align="center">
+<img src="static/image/databaseSetting.png" alt="Database Configuration Interface" width="80%">
+<p><i>Visual configuration of MySQL connection information</i></p>
+</div>
+
+⚠️ **Important**:
+- Be sure to click the **"Save Configuration"** button after configuration
+- If you need to manually adjust configuration or modify advanced parameters, please directly edit the `config.py` file in the project root directory
+
+#### 【3】Select Data Source and Import
+
+After saving configuration, the system will automatically redirect to the health check page within 3 seconds. If the check passes, click the **"Import Training Data"** button:
+
+<div align="center">
+<img src="static/image/jumpToImportData.png" alt="Jump to Import Data" width="80%">
+<p><i>Import entry after health check passes</i></p>
+</div>
+
+**Select Your Data Source Type**:
+
+<div align="center">
+<img src="static/image/dataSourceSelect.png" alt="Select Data Source" width="80%">
+<p><i>Supports both Keep and Garmin data sources</i></p>
+</div>
+
+**Keep User Import Process**:
+1. Select "Keep" data source
+2. Upload Excel table downloaded from email
+3. Wait for import to complete
+
+<div align="center">
+<img src="static/image/keepImportSuccess.png" alt="Keep Import Success" width="80%">
+<p><i>Keep Data Import Success Prompt</i></p>
+</div>
+
+**Garmin User Import Process**:
+1. Select "Garmin" data source
+2. Enter Garmin Connect email and password
+3. System automatically syncs historical training data
+
+<div align="center">
+<img src="static/image/garminImportSuccess.png" alt="Garmin Import Success" width="80%">
+<p><i>Garmin Data Sync Success Prompt</i></p>
+</div>
+
+After import is complete, you can enter the system and start using it!
+
+---
+
+### 📊 Training Data Backend Management
+
+In the upper right corner of the main interface, or directly access **http://localhost:5000/training** to enter the data monitoring backend.
+
+**Garmin User Backend** (Simple Mode):
+
+<div align="center">
+<img src="static/image/garminDataMonitor.png" alt="Garmin Data Backend" width="80%">
+<p><i>Garmin Data Backend - One-click sync latest training data</i></p>
+</div>
+
+- Click the **"Sync Garmin Data"** button in the upper right corner to sync latest training records in real-time
+- No need to manually add or manage data
+
+**Keep User Backend** (Full CRUD):
+
+<div align="center">
+<img src="static/image/keepDataMonitor.png" alt="Keep Data Backend" width="80%">
+<p><i>Keep Data Backend - Supports CRUD operations</i></p>
+</div>
+
+- Provides full CRUD functionality
+- Due to Keep's closed ecosystem, manual data sync is needed (cannot frequently export Excel)
+- Supports adding, editing, and deleting individual records
+
+---
+
+### 🛠️ Single Agent Debug Mode (Developer Option)
+
+If you need to debug individual agents, you can use Streamlit debug interface:
 
 ```bash
-# Start Query Agent debug interface
+# Start Query Agent (Theory Expert)
 streamlit run SingleEngineApp/query_engine_streamlit_app.py --server.port 8503
 
-# Start Media Agent debug interface
+# Start Media Agent (Logistics Intelligence)
 streamlit run SingleEngineApp/media_engine_streamlit_app.py --server.port 8502
 
-# Start Insight Agent debug interface
+# Start Insight Agent (Data Analyst)
 streamlit run SingleEngineApp/insight_engine_streamlit_app.py --server.port 8501
 ```
 
@@ -403,25 +362,27 @@ Synapse_Run/
 │   ├── agent.py                   # Agent main logic
 │   ├── llms/base.py               # LLM interface wrapper
 │   ├── nodes/                     # Processing nodes (search/summary/formatting)
-│   ├── tools/search.py            # Tavily search tool
+│   ├── tools/                     # Tavily search tools
 │   ├── prompts/prompts.py         # Prompt templates
+│   ├── state/state.py             # State management
 │   └── utils/config.py            # Configuration management
 │
 ├── MediaEngine/                   # Logistics Intelligence Agent
 │   ├── agent.py                   # Agent main logic
 │   ├── llms/base.py               # LLM interface
 │   ├── nodes/                     # Processing nodes
-│   ├── tools/search.py            # Bocha search tool
+│   ├── tools/                     # Bocha search tools
 │   ├── prompts/prompts.py         # Prompt templates
+│   ├── state/state.py             # State management
 │   └── utils/config.py            # Configuration management
 │
 ├── InsightEngine/                 # Data Analyst Agent
 │   ├── agent.py                   # Agent main logic
 │   ├── llms/base.py               # LLM interface wrapper
 │   ├── nodes/                     # Processing nodes
-│   ├── tools/search.py            # Database query tools
+│   ├── tools/                     # Database query tools (Keep/Garmin)
+│   ├── prompts/                   # Prompt templates & tool descriptions
 │   ├── state/state.py             # State management
-│   ├── prompts/prompts.py         # Prompt templates
 │   └── utils/config.py            # Configuration management
 │
 ├── ReportEngine/                  # Report Generator Agent
@@ -429,59 +390,79 @@ Synapse_Run/
 │   ├── llms/base.py               # LLM interface
 │   ├── nodes/                     # Report generation nodes
 │   ├── report_template/           # 20+ professional report templates
-│   │   ├── 训练理论与流派对比报告模板.md
-│   │   ├── 营养补给与饮食策略报告模板.md
-│   │   ├── 跑步损伤机制与康复报告模板.md
-│   │   ├── 心率训练与配速控制报告模板.md
+│   │   ├── Training Theory Comparison Template.md
+│   │   ├── Nutrition Strategy Template.md
+│   │   ├── Injury Recovery Template.md
 │   │   └── ... (20+ professional templates)
-│   └── flask_interface.py         # Flask API interface
+│   ├── prompts/prompts.py         # Prompt templates
+│   ├── state/state.py             # State management
+│   └── utils/config.py            # Configuration management
 │
 ├── ForumEngine/                   # Forum Engine
 │   ├── monitor.py                 # Log monitoring and forum management
 │   └── llm_host.py                # LLM host module
 │
-├── routes/                        # Flask routes
-│   └── training_data.py           # Training data management route (/training)
+├── routes/                        # Flask routing module
+│   ├── routes/                    # Sub-routes directory
+│   ├── utils/                     # Route utility functions
+│   ├── setup.py                   # Setup page routes
+│   └── training_data.py           # Training data management routes
 │
 ├── SingleEngineApp/               # Single Agent debug interface
-│   ├── query_engine_streamlit_app.py
-│   ├── media_engine_streamlit_app.py
-│   └── insight_engine_streamlit_app.py
+│   ├── query_engine_streamlit_app.py    # Query Agent debug
+│   ├── media_engine_streamlit_app.py    # Media Agent debug
+│   └── insight_engine_streamlit_app.py  # Insight Agent debug
 │
 ├── scripts/                       # Utility scripts
-│   ├── import_training_data.py    # Keep data import script
-│   └── clear_reports.py           # Clear reports script
+│   ├── training_data_importer.py  # Training data importer
+│   ├── training_tables.sql        # Database table structure
+│   └── clear_reports.sh           # Clear reports script
 │
 ├── templates/                     # Flask frontend templates
-│   └── index.html                 # Main interface
+│   ├── index.html                 # Main interface
+│   ├── setup.html                 # Configuration page
+│   ├── training_data.html         # Keep data backend
+│   └── training_data_garmin.html  # Garmin data backend
 │
 ├── static/                        # Static resources
-│   └── image/                     # Image resources
-│       ├── logo.png               # Project Logo
-│       ├── finalResult.png        # Final report example
-│       ├── forumResult.png        # Forum collaboration example
-│       ├── theoryExperResult.png  # Theory expert example
-│       ├── logisticsIntelligenceResult.png  # Intelligence officer example
-│       └── sportScientistResult.png  # Data analysis example
+│   ├── image/                     # Image resources
+│   │   ├── logo.png               # Project Logo
+│   │   ├── finalResult.png        # Final report example
+│   │   ├── forumResult.png        # Forum collaboration example
+│   │   ├── healthCheck.png        # Health check interface
+│   │   ├── apiSetting.png         # API configuration interface
+│   │   ├── databaseSetting.png    # Database configuration interface
+│   │   └── ... (more screenshots)
+│   └── js/                        # JavaScript files
+│
+├── utils/                         # Common utility modules
+│   ├── forum_reader.py            # Agent forum reading tool
+│   ├── retry_helper.py            # Network request retry mechanism
+│   ├── time_helper.py             # Time processing tool
+│   ├── health_check.py            # System health check
+│   └── config_reloader.py         # Configuration hot reload
 │
 ├── logs/                          # Runtime log directory
+│   └── forum.log                  # Forum communication log
 │
-├── reports/                       # Generated report files directory
-│
-├── utils/                         # Common utilities
-│   ├── forum_reader.py            # Agent forum reading tool
-│   └── retry_helper.py            # Network request retry mechanism
-│
-├── schema/                        # Database Schema
-│   └── training_tables.sql        # Training data table structure
+├── reports/                       # Web-generated report files
+├── final_reports/                 # Final report storage directory
+├── *_streamlit_reports/           # Streamlit debug report directories
+├── data/                          # Temporary data directory
+├── docs/                          # Documentation directory
+├── models/                        # Training record ORM models
 │
 ├── app.py                         # Flask main application entry
 ├── config.py                      # Global configuration file
 ├── requirements.txt               # Python dependency list
 ├── README.md                      # Chinese documentation
 ├── README-EN.md                   # English documentation
-└── LICENSE                        # GPL-2.0 License
+└── .gitignore                     # Git ignore configuration
 ```
+
+**Note**:
+- Files in `logs/`, `reports/`, `data/` directories are not tracked by Git (configured in .gitignore)
+- `*_streamlit_reports/` are temporary report directories generated by Streamlit debug mode
 
 ---
 
@@ -499,22 +480,23 @@ When searching for weather, routes, races and other information, prioritize reso
 """
 ```
 
-### 2. Import Personal Training Data (Keep Format)
+### 2. Switch Data Source
 
-When using for the first time, you need to import your historical training data:
+The system supports both Keep and Garmin data sources, configurable in `config.py`:
 
-**Steps**:
-1. Export all personal training data from Keep App (format: Excel)
-2. Rename the exported Excel file to `training_data.xlsx` and place it in the project's data/ directory
-3. Run the import script:
-
-```bash
-python scripts/import_training_data.py
+```python
+# Training data source configuration
+TRAINING_DATA_SOURCE = "garmin"  # Options: "keep" or "garmin"
 ```
 
-**Ongoing Management**:
-- After starting the project, visit **http://localhost:5000/training** route
-- Visually manage training data in the web interface (CRUD operations)
+**Data Source Comparison**:
+
+| Feature | Keep | Garmin |
+|---------|------|--------|
+| **Data Import** | Manual Excel upload | Auto-sync (email authorization) |
+| **Data Update** | Manual addition | One-click sync |
+| **Data Richness** | Basic training metrics | Advanced physiological metrics (HRV, training load, etc.) |
+| **Backend Management** | Full CRUD | Read-only + sync button |
 
 ### 3. Customize Report Templates
 
@@ -612,13 +594,6 @@ Any LLM compatible with OpenAI calling format can be used:
 <p><i>Insight Agent deeply mines historical training data</i></p>
 </div>
 
-### Training Data Management Backend
-
-<div align="center">
-<img src="static/image/runTrack.png" alt="Training Data Management Interface" width="90%">
-<p><i>/training route - Visually manage personal training data, supports Keep data import and CRUD operations</i></p>
-</div>
-
 ### Final Intelligent Report
 
 <div align="center">
@@ -632,36 +607,46 @@ Any LLM compatible with OpenAI calling format can be used:
 
 ### InsightAgent Data Source Extension
 
-**Current Limitations**:
+**✅ Supported Data Sources**: Keep, Garmin Connect
 
-The InsightAgent in the current project strictly follows Keep's export format, with the following generalization issues:
-- **Strong Format Dependency**: Only supports Keep's Excel export format, data from other sports apps needs manual conversion
-- **Manual Maintenance**: Each time new data is imported, it needs to be manually added in the `/training` route, cannot be automatically synchronized
+**🚀 Extendable Data Sources**:
 
-**Extension Suggestions**:
+The system adopts modular design, making it easy to integrate data from more sports platforms:
 
-Consider using **Garmin Connect API** to achieve automated data synchronization:
+| Data Source | Integration Difficulty | API Support | Recommendation |
+|------------|----------------------|------------|----------------|
+| **Strava** | ⭐⭐ | Official API well-developed | ⭐⭐⭐⭐⭐ |
+| **Nike Run Club** | ⭐⭐⭐⭐ | Requires reverse engineering | ⭐⭐⭐ |
+| **Yuepao Circle** | ⭐⭐⭐ | Data export supported | ⭐⭐⭐ |
+| **Codoon Sports** | ⭐⭐⭐ | Data export supported | ⭐⭐⭐ |
+| **Apple Health** | ⭐⭐ | Exports XML format | ⭐⭐⭐⭐ |
 
-| Solution | Advantages | Challenges |
-|----------|-----------|------------|
-| **Garmin API Integration** | - Automatic training data synchronization<br>- Support for richer sports metrics (heart rate variability, training load, etc.)<br>- No manual import required | - Requires Garmin account authorization<br>- API calls may be subject to network restrictions<br>- Need to handle OAuth authentication process |
+**Extension Steps**:
 
-**Implementation Ideas**:
+1. **Data Source Adapter Development** (`InsightEngine/tools/`):
+   ```python
+   class StravaDataAdapter:
+       def fetch_activities(self, access_token):
+           # Call Strava API to fetch training data
+           pass
 
-1. **API Authentication**: Integrate Garmin Connect OAuth 2.0 authentication process
-2. **Data Synchronization**: Scheduled tasks (Cron/Celery) automatically pull new training data
-3. **Data Conversion**: Convert JSON format returned by Garmin API to system database schema
-4. **Incremental Update**: Only synchronize new data, avoid duplicate imports
+       def convert_to_schema(self, strava_data):
+           # Convert to system database schema
+           pass
+   ```
 
-**Author's Note**:
+2. **Configuration File Update** (`config.py`):
+   ```python
+   TRAINING_DATA_SOURCE = "strava"  # New data source option
+   STRAVA_CLIENT_ID = "your_client_id"
+   STRAVA_CLIENT_SECRET = "your_client_secret"
+   ```
 
-Due to uncontrollable network factors (GFW, etc.), the author cannot stably access Garmin Connect API, making native direct implementation difficult. It may require implementation through API proxy or relay services. **Interested partners are welcome to extend based on this idea**, PRs are welcome!
+3. **Backend Interface Extension** (`routes/training_data.py`):
+   - Add Strava authorization button
+   - Implement data sync interface
 
-**Other Extendable Data Sources**:
-- 🏃 **Nike Run Club**: Through reverse engineering its mobile app API
-- 🏃 **Strava**: Official API support is comprehensive, suitable for integration
-- 🏃 **Yuepao Circle**: Mainstream domestic running app, can try data export
-- 🏃 **Codoon Sports**: Supports data export function
+**Community Contributions Welcome**: If you successfully integrate new data sources, welcome to submit PR and share with the community!
 
 ---
 

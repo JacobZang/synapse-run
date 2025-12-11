@@ -6,154 +6,32 @@
 
 **智能跑步训练助手 | 多智能体协作系统**
 
-[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html) [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html) [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/) [![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](https://github.com/zephyr4123/synapse-run)
 
-[English](./README-EN.md) | [中文文档](./README.md)
+[English](./README-EN.md) | [中文文档](./README.md) | [更新日志](./docs/updateLog.md)
 
 </div>
 
 ---
 
-## 📢 更新日志
+## 🎉 v1.0.0 正式版更新说明
 
-### 2025.12.10 - InsightEngine ORM架构升级与SQL注入防护
+**发布日期**: 2025年12月
 
-#### 🔒 核心安全升级
-- **ORM架构重构**: InsightEngine全面从原生SQL查询迁移到SQLAlchemy ORM,从根本上杜绝SQL注入风险
-- **统一会话管理**: 新增`db_session_manager`单例模式管理数据库连接,确保线程安全与资源高效利用
-- **自动配置读取**: 数据库配置直接从`config.py`动态导入,消除环境变量依赖,简化部署流程
+### ✨ 重大更新
 
-#### 🏗️ 数据模型标准化
-- **ORM模型定义** (`db_models.py`):
-  - `TrainingRecordKeep`: Keep数据源的SQLAlchemy模型,映射`training_records_keep`表
-  - `TrainingRecordGarmin`: Garmin数据源的SQLAlchemy模型,映射`training_records_garmin`表
-  - 完整字段类型定义,支持IDE智能提示与类型安全检查
-- **声明式基类**: 使用`declarative_base()`统一ORM基类,遵循SQLAlchemy最佳实践
+1. **🏃 扩展佳明(Garmin)数据支持**: 完全兼容Garmin Connect数据源,保持可扩展性,便于后续接入更多运动平台
+2. **🎨 可视化配置界面**: 首次使用提供健康检查与可视化配置流程,无需手动编辑config.py,一键配置API密钥与数据库
+3. **📊 智能数据源适配**: 根据`TRAINING_DATA_SOURCE`配置动态调整LLM提示词与工具集(Garmin拥有更丰富的生理指标工具)
+4. **📈 双数据后台支持**: `/training`监控页面支持Keep与Garmin两种模式
+   - **Keep模式**: 提供增删改查功能,手动管理训练数据
+   - **Garmin模式**: 一键同步按钮,自动从Garmin Connect拉取最新数据
 
-#### 🔧 工具类ORM重写
-- **Keep工具** (`keep_search.py`):
-  - 所有查询方法从`cursor.execute(sql)`改写为`session.query(TrainingRecordKeep).filter(...)`
-  - 使用ORM表达式构建复杂查询条件,代码可读性提升40%
-  - 统计聚合使用`func.count()`, `func.sum()`, `func.avg()`等SQLAlchemy函数
-- **Garmin工具** (`garmin_search.py`):
-  - 9个查询方法全部ORM化,包括基础查询与Garmin专属查询
-  - 复杂条件使用`and_()`, `or_()`, `case()`等组合表达式
-  - 训练负荷、功率区间等高级查询使用ORM聚合与条件构建
+### 🔧 配置优化
 
-#### 📦 会话管理优化
-- **懒加载机制** (`db_session_manager`):
-  - 首次查询时自动初始化数据库引擎,避免启动时配置检查失败
-  - 上下文管理器`get_session()`确保会话正确关闭,防止连接泄漏
-  - 线程安全的引擎单例,支持多线程并发查询
-- **连接池配置**:
-  - 默认连接池大小5,最大溢出10,连接回收时间3600秒
-  - 支持通过`config.py`动态调整连接池参数
-
-#### 🚀 性能与代码质量提升
-- **查询性能**: ORM编译生成的SQL与手写SQL性能持平,预编译机制避免重复解析
-- **代码简化**: 移除所有手动SQL拼接与参数化逻辑,代码量减少约30%
-- **类型安全**: 所有查询返回ORM对象,支持属性访问,IDE智能提示完整
-- **错误处理**: 统一异常捕获与日志记录,数据库错误追踪更清晰
-
-#### 📝 破坏性更新
-- **移除原生SQL**: 完全删除`pymysql.connect()`与`cursor.execute()`调用
-- **统一接口**: 所有工具方法返回类型保持不变(`DBResponse`),上层Agent无需修改
-- **配置简化**: 不再需要`pymysql.cursors.DictCursor`等底层配置
-
-#### 🎯 安全合规
-- **防注入设计**: ORM参数化查询,用户输入自动转义,符合OWASP安全标准
-- **最小权限**: 数据库连接仅需SELECT权限,降低潜在攻击面
-- **审计追踪**: 所有查询通过ORM统一日志,便于安全审计与监控
-
-### 2025.12.10 - InsightEngine多数据源工具架构重构
-
-#### 🔧 核心架构升级
-- **多数据源支持**: InsightEngine全面支持Keep和Garmin两种训练数据源的动态切换
-- **工厂模式设计**: 新增`TrainingDataSearchFactory`工厂类,根据`config.py`的`TRAINING_DATA_SOURCE`配置自动创建对应数据源工具
-- **独立数据模型**: Keep和Garmin使用各自独立的数据类,完整保留各数据源的原生字段特性
-
-#### 📦 工具类重构
-- **基类架构** (`base_search.py`): 定义统一的查询接口,所有数据源必须实现6个核心查询方法
-- **Keep工具** (`keep_search.py`): `KeepDataSearch`类,支持Keep数据源的6种查询工具
-- **Garmin工具** (`garmin_search.py`): `GarminDataSearch`类,支持6种基础查询 + 3种专属查询
-  - 基础查询: 最近训练、日期范围、统计数据、距离范围、心率区间、运动类型汇总
-  - Garmin专属: 训练负荷查询、功率区间查询、训练效果分析
-
-#### 🎯 数据类设计
-- **KeepTrainingRecord**: 对应`training_records_keep`表,包含心率数组等Keep特有字段
-- **GarminTrainingRecord**: 对应`training_records_garmin`表,包含40+专业运动指标
-  - 心率指标: 5个心率区间时长统计
-  - 步频步幅: 平均/最大步频、步幅、垂直振幅、触地时间、步数等
-  - 功率指标: 平均/最大/标准化功率、5个功率区间时长
-  - 训练效果: 有氧/无氧训练效果、训练负荷、训练效果标签
-  - 速度与代谢: 速度、卡路里、失水量、强度时长、Body Battery变化
-
-#### 🚀 Agent集成优化
-- **自动工具选择**: `agent.py`启动时自动根据配置创建对应数据源工具
-- **智能提示**: 根据当前数据源显示不同的分析能力描述和支持的查询工具列表
-- **无缝切换**: 仅需修改`config.py`中的`TRAINING_DATA_SOURCE`字段即可切换数据源
-
-#### 📝 代码质量提升
-- **破坏性更新**: 移除向后兼容代码,统一使用`create_training_data_search()`工厂方法
-- **清理冗余**: 删除旧的`training_search.py`,统一到新架构
-- **测试覆盖**: 新增`test_tools.py`测试脚本,覆盖所有核心功能
-
-### 2025.12.10 - 训练数据导入系统重构与多数据源整合
-
-#### 🔄 核心架构升级
-- **统一导入模块**: 合并`import_training_data.py`和`import_garmin_data.py`为统一模块`training_data_importer.py`
-- **API专用设计**: 移除所有CLI命令行功能,专注于后端API调用接口,提升系统架构的纯净性
-- **基类架构**: 新增`BaseImporter`基类,统一数据库引擎初始化逻辑,便于扩展更多数据源
-
-#### 📦 导入器重构
-- **Keep导入器** (`KeepDataImporter`): Excel文件导入,支持.xlsx/.xls/.csv格式,批量提交优化(100条/批次)
-- **Garmin导入器** (`GarminDataImporter`): Garmin Connect在线数据抓取,自动登录+活动过滤+批量导入
-- **懒加载引擎**: 数据库引擎采用懒加载模式,直接从config.py读取最新配置,避免importlib.reload不确定性
-
-#### 🎨 Web界面增强
-- **可视化数据源选择**: 新增数据源选择界面,支持Keep和Garmin两种数据源的可视化切换
-- **Garmin在线导入**: 在Web界面直接输入Garmin账户,一键抓取跑步数据(支持中国区/国际区账户)
-- **测试登录功能**: 支持Garmin登录测试,验证账户可用性后再执行数据导入
-- **导入结果反馈**: 实时显示导入统计(成功/失败条数),提供详细的操作反馈
-
-#### 🗄️ 数据库架构优化
-- **多数据源支持**: 新增`TrainingRecordManager`类,支持Keep和Garmin两种训练数据格式的动态切换
-- **Garmin数据模型**: 新增`TrainingRecordGarmin`表,支持40+专业运动指标(心率区间、功率区间、步频步幅、训练负荷等)
-- **字段映射系统**: 实现智能字段映射机制,自动适配不同数据源的字段差异(如Keep的`start_time` ↔ Garmin的`start_time_gmt`)
-- **数据隔离**: Keep和Garmin数据存储在独立表中,互不干扰,支持独立统计视图
-
-#### 🔌 API接口扩展
-- **数据源管理**: 新增`/api/test_garmin_login`接口,支持Garmin账户登录测试
-- **在线导入**: 新增`/api/import_garmin_data`接口,支持Garmin Connect在线数据抓取与导入
-- **配置管理**: 优化`/api/save_config`接口,支持保存Garmin账户信息到配置文件
-- **Excel上传**: 优化`/api/upload_training_excel`接口,统一使用新导入器架构
-
-#### 📝 技术改进
-- **明确命名**: Keep导入使用`KeepDataImporter`,Garmin导入使用`GarminDataImporter`,语义清晰
-- **错误处理**: 完善Garmin登录异常捕获,提供清晰的错误提示信息
-- **代码简化**: 移除重复的数据库引擎创建逻辑,统一到BaseImporter基类中
-- **导入模式**: 统一采用覆盖写入模式(truncate_first=True),避免数据重复
-
-### 2025.12.8 - 训练数据导入功能修复
-- **🔧 数据库连接修复**: 修复Excel训练数据导入时的数据库认证失败问题
-- **⚡ 配置读取优化**: 移除不可靠的`importlib.reload()`机制,改为直接从config.py构建数据库引擎
-- **✅ 稳定性提升**: 导入器现在每次初始化都能准确读取最新的数据库配置,避免环境变量干扰
-- **📊 Web上传保障**: 确保通过Web界面(/setup)上传Excel文件时的数据库连接稳定性
-### 2025.12.8 - 可视化配置系统上线
-- **🎨 可视化配置界面**: 新增Web可视化配置页面(`/setup`),支持LLM API、搜索API、MySQL数据库的可视化配置
-- **✅ 智能健康检查**: 系统启动时自动运行8项健康检查,配置不完整时自动跳转到配置页面
-- **🔧 实时连接测试**: 支持LLM API和MySQL连接的实时测试,配置前即可验证连接可用性
-- **🗄️ 一键数据库初始化**: 点击按钮即可自动创建数据库和表结构,无需手动执行SQL脚本
-- **📱 响应式设计**: 采用Morandi色系的现代化UI设计,横版布局一屏显示所有功能
-- **⚠️ 重要提示**: 首次启动系统会自动重定向到配置页面,完成配置后才能正常使用
-
-### 2025.12.8 - 配置管理重构
-- **🔧 统一配置变量**: 将所有Agent的LLM配置统一为`LLM_API_KEY`、`LLM_BASE_URL`、`DEFAULT_MODEL_NAME`、`REPORT_MODEL_NAME`四个变量
-- **📝 简化配置流程**: 除ReportAgent使用`qwen3-max`外，其他Agent统一使用`qwen-plus-latest`
-- **⚠️ 重要提示**: 如果您之前使用旧版本配置，请参考[配置说明](#-配置说明)章节更新您的`config.py`文件
-
-### 2025.12.8 - 数据库脚本修复
-- 添加缺失的`training_tables.sql`，同时调整`import_traning_data.py`的文件路径，均放在`scripts`文件夹下
+- 简化数据导入流程,支持Excel导入(Keep)与邮箱授权同步(Garmin)
+- 优化健康检查机制,启动时自动检测API与数据库配置
+- 增强错误提示,配置失败时提供详细指引
 
 ---
 
@@ -275,120 +153,202 @@
 
 ## 🚀 快速开始
 
-### 环境要求
+### 前置准备
 
-| 项目 | 要求 |
-|------|------|
-| **操作系统** | Windows / Linux / MacOS |
-| **Python版本** | 3.9 或更高版本 |
-| **包管理器** | Conda (推荐Anaconda或Miniconda) |
-| **数据库** | MySQL 8.0+ |
-| **内存** | 建议4GB以上 |
-| **磁盘空间** | 至少2GB可用空间 |
+在开始使用Synapse Run之前,请确保完成以下准备工作:
 
-### 📦 安装步骤
+#### 【1】环境配置
 
-#### 1. 克隆项目
+| 环境 | 要求 | 安装教程 |
+|------|------|---------|
+| **VSCode** | 最新稳定版 | [安装教程](https://blog.csdn.net/qq_52102933/article/details/120387246) |
+| **MySQL** | 8.0+ | [安装教程](https://blog.csdn.net/2509_94228395/article/details/155399232) |
+| **Git** | 最新版(可选) | [安装教程](https://blog.csdn.net/mukes/article/details/115693833) |
+| **Python** | 3.9+ | 推荐使用Conda环境管理 |
 
-**从GitHub克隆**:
+#### 【2】申请API密钥
+
+| API服务 | 用途 | 申请地址 |
+|---------|------|---------|
+| **阿里云大模型API** | 核心LLM服务 | https://dashscope.aliyun.com/ |
+| **Tavily搜索API** | 学术文献与理论检索 | https://www.tavily.com/ |
+| **Bocha爬虫API** | 实用情报收集(需购买ai_search版本) | https://open.bochaai.com/ |
+
+⚠️ **注意**: Bocha API必须购买**ai_search版本**,web_search版本不适用于本系统
+
+#### 【3】数据准备
+
+根据您使用的运动追踪设备选择对应的数据准备方式:
+
+**📱 Keep用户**:
+1. 打开Keep App
+2. 进入 `设置` → `个人收集清单` → `个人信息下载`
+3. 填写接收邮箱
+4. 等待约10分钟,完整Excel表格将发送到您的邮箱
+
+<div align="center">
+<img src="static/image/keepEmail.png" alt="Keep数据导出邮件" width="60%">
+<p><i>Keep数据导出邮件示例</i></p>
+</div>
+
+**⌚ Garmin用户**:
+- 准备好您的Garmin Connect账号邮箱与密码
+- 无需额外准备,系统将自动同步数据
+
+---
+
+### 📦 部署流程
+
+#### 1️⃣ 克隆项目
+
 ```bash
+# 从GitHub克隆(推荐)
 git clone https://github.com/zephyr4123/synapse-run.git
 cd synapse-run
-```
 
-**或从Gitee克隆**:
-```bash
+# 或从Gitee克隆(国内镜像)
 git clone https://gitee.com/zephyr123_3/synapse-run.git
 cd synapse-run
+
+# 或直接下载压缩包解压
 ```
 
-#### 2. 创建Conda环境
+#### 2️⃣ 安装依赖
 
 ```bash
-# 创建独立的Python环境
+# 如果使用Conda环境(推荐)
 conda create -n synapse_run python=3.11
 conda activate synapse_run
-```
+pip install -r requirements.txt
 
-#### 3. 安装依赖包
-
-```bash
-# 安装所有依赖
+# 或使用系统Python
 pip install -r requirements.txt
 ```
 
-#### 4. 配置系统
-
-##### 4.1 配置API密钥
-
-编辑项目根目录的 `config.py` 文件,填入您的API密钥:
-
-```python
-# ============================== 数据库配置 ==============================
-DB_HOST = "localhost"
-DB_PORT = 3306
-DB_USER = "your_username"
-DB_PASSWORD = "your_password"
-DB_NAME = "traningData"  # 数据库名称
-DB_CHARSET = "utf8mb4"
-
-# ============================== LLM配置 ==============================
-# 统一LLM配置 - 所有Agent共享相同的API Key和Base URL
-# 申请地址: https://dashscope.aliyun.com/
-
-# 统一API配置
-LLM_API_KEY = "your_qwen_api_key"
-LLM_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-
-# 模型配置
-DEFAULT_MODEL_NAME = "qwen-plus-latest"  # 用于: InsightEngine, MediaEngine, QueryEngine, ForumHost
-REPORT_MODEL_NAME = "qwen3-max"          # 用于: ReportEngine (强编码能力)
-
-# ============================== 网络工具配置 ==============================
-# Tavily API (申请地址: https://www.tavily.com/)
-TAVILY_API_KEY = "your_tavily_api_key"
-
-# Bocha API (申请地址: https://open.bochaai.com/)
-BOCHA_WEB_SEARCH_API_KEY = "your_bocha_api_key"
-```
-
-##### 4.2 初始化数据库
+#### 3️⃣ 启动系统
 
 ```bash
-# 登录MySQL并创建数据库
-mysql -u root -p
-
-# 在MySQL命令行中执行
-CREATE DATABASE traningData CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE traningData;
-SOURCE scripts/training_tables.sql;
-EXIT;
-```
-
-#### 5. 启动系统
-
-##### 5.1 完整系统启动 (推荐)
-
-```bash
-# 激活conda环境
+# 激活环境(如使用Conda)
 conda activate synapse_run
 
 # 启动主应用
 python app.py
 ```
 
-系统启动后,在浏览器访问 **http://localhost:5000** 即可使用完整功能
+启动后,浏览器会自动打开 **http://localhost:5000**
 
-##### 5.2 单Agent调试模式 (开发调试用)
+---
+
+### 🎯 初次使用配置
+
+#### 【1】健康检查
+
+首次启动时,系统会自动进行健康检查。如果检测到配置缺失或错误,会自动跳转到配置界面:
+
+<div align="center">
+<img src="static/image/healthCheck.png" alt="系统健康检查" width="80%">
+<p><i>系统健康检查 - 自动检测API与数据库配置</i></p>
+</div>
+
+#### 【2】可视化配置
+
+**配置API密钥**:
+
+<div align="center">
+<img src="static/image/apiSetting.png" alt="API配置界面" width="80%">
+<p><i>一键配置所有API密钥</i></p>
+</div>
+
+**配置MySQL数据库**:
+
+<div align="center">
+<img src="static/image/databaseSetting.png" alt="数据库配置界面" width="80%">
+<p><i>可视化配置MySQL连接信息</i></p>
+</div>
+
+⚠️ **重要**:
+- 配置完成后务必点击 **"保存配置"** 按钮
+- 如需手动调整配置或修改高级参数,请直接编辑项目根目录的 `config.py` 文件
+
+#### 【3】选择数据源并导入
+
+配置保存后,系统会在3秒内自动跳转回健康检查页面。如果检查通过,点击 **"导入训练数据"** 按钮:
+
+<div align="center">
+<img src="static/image/jumpToImportData.png" alt="跳转导入数据" width="80%">
+<p><i>健康检查通过后的导入入口</i></p>
+</div>
+
+**选择您的数据源类型**:
+
+<div align="center">
+<img src="static/image/dataSourceSelect.png" alt="选择数据源" width="80%">
+<p><i>支持Keep与Garmin两种数据源</i></p>
+</div>
+
+**Keep用户导入流程**:
+1. 选择 "Keep" 数据源
+2. 上传从邮箱下载的Excel表格
+3. 等待导入完成
+
+<div align="center">
+<img src="static/image/keepImportSuccess.png" alt="Keep导入成功" width="80%">
+<p><i>Keep数据导入成功提示</i></p>
+</div>
+
+**Garmin用户导入流程**:
+1. 选择 "Garmin" 数据源
+2. 输入Garmin Connect邮箱与密码
+3. 系统自动同步历史训练数据
+
+<div align="center">
+<img src="static/image/garminImportSuccess.png" alt="Garmin导入成功" width="80%">
+<p><i>Garmin数据同步成功提示</i></p>
+</div>
+
+导入完成后,即可进入系统开始使用!
+
+---
+
+### 📊 训练数据后台管理
+
+在主界面右上角,或直接访问 **http://localhost:5000/training** 进入数据监控后台。
+
+**Garmin用户后台** (简洁模式):
+
+<div align="center">
+<img src="static/image/garminDataMonitor.png" alt="Garmin数据后台" width="80%">
+<p><i>Garmin数据后台 - 一键同步最新训练数据</i></p>
+</div>
+
+- 点击右上角 **"同步Garmin数据"** 按钮即可实时同步最新训练记录
+- 无需手动添加或管理数据
+
+**Keep用户后台** (完整CRUD):
+
+<div align="center">
+<img src="static/image/keepDataMonitor.png" alt="Keep数据后台" width="80%">
+<p><i>Keep数据后台 - 支持增删改查操作</i></p>
+</div>
+
+- 提供完整的增删改查功能
+- 由于Keep生态封闭,需手动同步数据(无法频繁导出Excel)
+- 支持单条记录的添加、编辑、删除操作
+
+---
+
+### 🛠️ 单Agent调试模式 (开发者选项)
+
+如需单独调试某个Agent,可使用Streamlit调试界面:
 
 ```bash
-# 启动Query Agent调试界面
+# 启动Query Agent (理论专家)
 streamlit run SingleEngineApp/query_engine_streamlit_app.py --server.port 8503
 
-# 启动Media Agent调试界面
+# 启动Media Agent (后勤情报官)
 streamlit run SingleEngineApp/media_engine_streamlit_app.py --server.port 8502
 
-# 启动Insight Agent调试界面
+# 启动Insight Agent (数据分析师)
 streamlit run SingleEngineApp/insight_engine_streamlit_app.py --server.port 8501
 ```
 
@@ -402,25 +362,27 @@ Synapse_Run/
 │   ├── agent.py                   # Agent主逻辑
 │   ├── llms/base.py               # LLM接口封装
 │   ├── nodes/                     # 处理节点(搜索/总结/格式化)
-│   ├── tools/search.py            # Tavily搜索工具
+│   ├── tools/                     # Tavily搜索工具
 │   ├── prompts/prompts.py         # 提示词模板
+│   ├── state/state.py             # 状态管理
 │   └── utils/config.py            # 配置管理
 │
 ├── MediaEngine/                   # 后勤情报官Agent
 │   ├── agent.py                   # Agent主逻辑
 │   ├── llms/base.py               # LLM接口
 │   ├── nodes/                     # 处理节点
-│   ├── tools/search.py            # Bocha搜索工具
+│   ├── tools/                     # Bocha搜索工具
 │   ├── prompts/prompts.py         # 提示词模板
+│   ├── state/state.py             # 状态管理
 │   └── utils/config.py            # 配置管理
 │
 ├── InsightEngine/                 # 数据分析师Agent
 │   ├── agent.py                   # Agent主逻辑
 │   ├── llms/base.py               # LLM接口封装
 │   ├── nodes/                     # 处理节点
-│   ├── tools/search.py            # 数据库查询工具
+│   ├── tools/                     # 数据库查询工具(Keep/Garmin)
+│   ├── prompts/                   # 提示词模板与工具描述
 │   ├── state/state.py             # 状态管理
-│   ├── prompts/prompts.py         # 提示词模板
 │   └── utils/config.py            # 配置管理
 │
 ├── ReportEngine/                  # 报告生成器Agent
@@ -431,56 +393,76 @@ Synapse_Run/
 │   │   ├── 训练理论与流派对比报告模板.md
 │   │   ├── 营养补给与饮食策略报告模板.md
 │   │   ├── 跑步损伤机制与康复报告模板.md
-│   │   ├── 心率训练与配速控制报告模板.md
 │   │   └── ... (共20+个专业模板)
-│   └── flask_interface.py         # Flask API接口
+│   ├── prompts/prompts.py         # 提示词模板
+│   ├── state/state.py             # 状态管理
+│   └── utils/config.py            # 配置管理
 │
 ├── ForumEngine/                   # 论坛引擎
 │   ├── monitor.py                 # 日志监控和论坛管理
 │   └── llm_host.py                # LLM主持人模块
 │
-├── routes/                        # Flask路由
-│   └── training_data.py           # 训练数据管理路由(/training)
+├── routes/                        # Flask路由模块
+│   ├── routes/                    # 子路由目录
+│   ├── utils/                     # 路由工具函数
+│   ├── setup.py                   # 设置页面路由
+│   └── training_data.py           # 训练数据管理路由
 │
 ├── SingleEngineApp/               # 单Agent调试界面
-│   ├── query_engine_streamlit_app.py
-│   ├── media_engine_streamlit_app.py
-│   └── insight_engine_streamlit_app.py
+│   ├── query_engine_streamlit_app.py    # Query Agent调试
+│   ├── media_engine_streamlit_app.py    # Media Agent调试
+│   └── insight_engine_streamlit_app.py  # Insight Agent调试
 │
 ├── scripts/                       # 实用工具脚本
-│   ├── import_training_data.py    # Keep数据导入脚本
-│   └── clear_reports.py           # 清空报告脚本
+│   ├── training_data_importer.py  # 训练数据导入器
+│   ├── training_tables.sql        # 数据库表结构
+│   └── clear_reports.sh           # 清空报告脚本
 │
 ├── templates/                     # Flask前端模板
-│   └── index.html                 # 主界面
+│   ├── index.html                 # 主界面
+│   ├── setup.html                 # 配置页面
+│   ├── training_data.html         # Keep数据后台
+│   └── training_data_garmin.html  # Garmin数据后台
 │
 ├── static/                        # 静态资源
-│   └── image/                     # 图片资源
-│       ├── logo.png               # 项目Logo
-│       ├── finalResult.png        # 最终报告示例
-│       ├── forumResult.png        # 论坛协作示例
-│       ├── theoryExperResult.png  # 理论专家示例
-│       ├── logisticsIntelligenceResult.png  # 情报官示例
-│       └── sportScientistResult.png  # 数据分析示例
+│   ├── image/                     # 图片资源
+│   │   ├── logo.png               # 项目Logo
+│   │   ├── finalResult.png        # 最终报告示例
+│   │   ├── forumResult.png        # 论坛协作示例
+│   │   ├── healthCheck.png        # 健康检查界面
+│   │   ├── apiSetting.png         # API配置界面
+│   │   ├── databaseSetting.png    # 数据库配置界面
+│   │   └── ... (更多截图)
+│   └── js/                        # JavaScript文件
+│
+├── utils/                         # 通用工具模块
+│   ├── forum_reader.py            # Agent读取论坛工具
+│   ├── retry_helper.py            # 网络请求重试机制
+│   ├── time_helper.py             # 时间处理工具
+│   ├── health_check.py            # 系统健康检查
+│   └── config_reloader.py         # 配置热重载
 │
 ├── logs/                          # 运行日志目录
+│   └── forum.log                  # 论坛交流日志
 │
-├── reports/                       # 生成的报告文件目录
-│
-├── utils/                         # 通用工具
-│   ├── forum_reader.py            # Agent读取论坛工具
-│   └── retry_helper.py            # 网络请求重试机制
-│
-├── schema/                        # 数据库Schema
-│   └── training_tables.sql        # 训练数据表结构
+├── reports/                       # Web生成的报告文件
+├── final_reports/                 # 最终报告存储目录
+├── *_streamlit_reports/           # Streamlit调试报告目录
+├── data/                          # 临时数据目录
+├── docs/                          # 文档目录
+├── models/                        # 训练记录ORM模型
 │
 ├── app.py                         # Flask主应用入口
 ├── config.py                      # 全局配置文件
 ├── requirements.txt               # Python依赖清单
 ├── README.md                      # 中文说明文档
-├── README-EN.md                   # 英文说明文档(待完善)
-└── LICENSE                        # GPL-2.0许可证
+├── README-EN.md                   # 英文说明文档
+└── .gitignore                     # Git忽略配置
 ```
+
+**注意**:
+- `logs/`、`reports/`、`data/` 目录下的文件不会被Git追踪(已在.gitignore中配置)
+- `*_streamlit_reports/` 为Streamlit调试模式生成的临时报告目录
 
 ---
 
@@ -498,22 +480,23 @@ LOCATION_PROMPT = """
 """
 ```
 
-### 2. 导入个人训练数据 (Keep格式)
+### 2. 切换数据源
 
-首次使用时,需要导入您的历史训练数据:
+系统支持Keep与Garmin两种数据源,可在 `config.py` 中配置:
 
-**步骤**:
-1. 在Keep App中导出个人全部训练数据(格式:Excel)
-2. 将导出的Excel文件重命名为 `training_data.xlsx`,放在项目data/目录下
-3. 运行导入脚本:
-
-```bash
-python scripts/import_training_data.py
+```python
+# 训练数据源配置
+TRAINING_DATA_SOURCE = "garmin"  # 可选: "keep" 或 "garmin"
 ```
 
-**后续管理**:
-- 启动项目后,访问 **http://localhost:5000/training** 路由
-- 在Web界面中可视化管理训练数据(增删改查)
+**数据源对比**:
+
+| 特性 | Keep | Garmin |
+|------|------|--------|
+| **数据导入** | 手动上传Excel | 自动同步(邮箱授权) |
+| **数据更新** | 手动添加 | 一键同步 |
+| **数据丰富度** | 基础训练指标 | 高级生理指标(心率变异性、训练负荷等) |
+| **后台管理** | 完整CRUD | 只读+同步按钮 |
 
 ### 3. 自定义报告模板
 
@@ -611,13 +594,6 @@ python scripts/import_training_data.py
 <p><i>Insight Agent深度挖掘历史训练数据</i></p>
 </div>
 
-### 训练数据管理后台
-
-<div align="center">
-<img src="static/image/runTrack.png" alt="训练数据管理界面" width="90%">
-<p><i>/training路由 - 可视化管理个人训练数据,支持Keep数据导入与CRUD操作</i></p>
-</div>
-
 ### 最终智能报告
 
 <div align="center">
@@ -631,36 +607,46 @@ python scripts/import_training_data.py
 
 ### InsightAgent数据源扩展
 
-**当前限制**:
+**✅ 已支持数据源**: Keep、Garmin Connect
 
-目前项目中的InsightAgent严格遵循Keep的导出格式,存在以下泛化性问题:
-- **格式依赖强**: 仅支持Keep的Excel导出格式,其他运动应用数据需手动转换
-- **手动维护**: 每次导入新数据都需要在 `/training` 路由手动添加,无法自动化同步
+**🚀 可扩展数据源**:
 
-**扩展建议**:
+系统采用模块化设计,易于接入更多运动平台数据:
 
-考虑使用 **Garmin Connect API** 实现自动化数据同步:
+| 数据源 | 集成难度 | API支持 | 推荐度 |
+|--------|---------|---------|--------|
+| **Strava** | ⭐⭐ | 官方API完善 | ⭐⭐⭐⭐⭐ |
+| **Nike Run Club** | ⭐⭐⭐⭐ | 需逆向工程 | ⭐⭐⭐ |
+| **悦跑圈** | ⭐⭐⭐ | 数据导出支持 | ⭐⭐⭐ |
+| **咕咚运动** | ⭐⭐⭐ | 数据导出支持 | ⭐⭐⭐ |
+| **Apple Health** | ⭐⭐ | 导出XML格式 | ⭐⭐⭐⭐ |
 
-| 方案 | 优点 | 挑战 |
-|------|------|------|
-| **Garmin API集成** | - 自动同步训练数据<br>- 支持更丰富的运动指标(心率变异性、训练负荷等)<br>- 无需手动导入 | - 需要Garmin账号授权<br>- API调用可能受网络限制<br>- 需处理OAuth认证流程 |
+**扩展步骤**:
 
-**实现思路**:
+1. **数据源适配器开发** (`InsightEngine/tools/`):
+   ```python
+   class StravaDataAdapter:
+       def fetch_activities(self, access_token):
+           # 调用Strava API获取训练数据
+           pass
 
-1. **API认证**: 集成Garmin Connect OAuth 2.0认证流程
-2. **数据同步**: 定时任务(Cron/Celery)自动拉取新训练数据
-3. **数据转换**: 将Garmin API返回的JSON格式转换为系统数据库Schema
-4. **增量更新**: 仅同步新增数据,避免重复导入
+       def convert_to_schema(self, strava_data):
+           # 转换为系统数据库Schema
+           pass
+   ```
 
-**作者说明**:
+2. **配置文件更新** (`config.py`):
+   ```python
+   TRAINING_DATA_SOURCE = "strava"  # 新增数据源选项
+   STRAVA_CLIENT_ID = "your_client_id"
+   STRAVA_CLIENT_SECRET = "your_client_secret"
+   ```
 
-由于不可控的网络因素(GFW等),作者无法稳定访问Garmin Connect API,原生直接实现较为困难,可能需要通过API代理或中转服务实现。**有兴趣的伙伴可以基于此思路自行扩展**,欢迎提交PR!
+3. **后台界面扩展** (`routes/training_data.py`):
+   - 添加Strava授权按钮
+   - 实现数据同步接口
 
-**其他可扩展数据源**:
-- 🏃 **Nike Run Club**: 通过逆向工程其移动应用API
-- 🏃 **Strava**: 官方API支持完善,适合集成
-- 🏃 **悦跑圈**: 国内主流跑步应用,可尝试数据导出
-- 🏃 **咕咚运动**: 支持数据导出功能
+**欢迎社区贡献**: 如果您成功集成了新的数据源,欢迎提交PR分享给社区!
 
 ---
 
