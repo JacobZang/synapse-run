@@ -1,62 +1,61 @@
 # ========================================
-#   Weibo舆情分析多智能体系统依赖包
-#   适用于Windows环境 + Conda部署
+#   Synapse Run 训练数据分析系统依赖包
+#   Python 3.9+ | 支持Windows/Linux/macOS
+#   建议使用Conda环境管理
 # ========================================
 
 # ===== 核心Web框架 =====
-flask==2.3.3
-flask-socketio==5.3.6
-streamlit==1.28.1
-python-socketio==5.8.0
-eventlet==0.33.3
+flask==2.3.3                    # 主Web应用框架
+flask-socketio==5.3.6           # WebSocket实时通信
+streamlit==1.28.1               # Agent调试界面
+python-socketio==5.8.0          # Socket.IO客户端
+eventlet==0.33.3                # 异步网络库
+fastapi==0.110.2                # 高性能API框架
+uvicorn==0.29.0                 # ASGI服务器
 
 # ===== HTTP请求和异步 =====
-requests==2.31.0
-httpx==0.28.1
-aiofiles==23.2.1
-aiohttp>=3.8.0
+requests==2.31.0                # 同步HTTP请求
+httpx==0.28.1                   # 异步HTTP客户端
+aiofiles==23.2.1                # 异步文件操作
+aiohttp>=3.8.0                  # 异步HTTP框架
 
 # ===== LLM接口 =====
-openai>=1.3.0
-# deepseek-ai>=0.1.0  # 使用OpenAI格式
+openai>=1.3.0                   # OpenAI兼容API客户端
 
-# ===== 搜索API =====
-tavily-python>=0.3.0
+# ===== 搜索与API工具 =====
+tavily-python>=0.3.0            # 网络搜索API
 
 # ===== 数据处理 =====
-pandas>=2.0.0
-numpy>=1.24.0
-regex>=2023.8.8
-jieba==0.42.1
+pandas>=2.0.0                   # 数据分析核心库
+numpy>=1.24.0                   # 数值计算库
+regex>=2023.8.8                 # 正则表达式增强
+jieba==0.42.1                   # 中文分词
+openpyxl>=3.1.0                 # Excel读写(xlsx格式)
 
 # ===== 数据库 =====
-pymysql==1.1.0
-aiomysql==0.2.0
-aiosqlite==0.21.0
-redis>=4.6.0
+sqlalchemy>=2.0.0               # ORM框架
+pymysql==1.1.0                  # MySQL驱动
+aiomysql==0.2.0                 # 异步MySQL
+aiosqlite==0.21.0               # 异步SQLite
+redis>=4.6.0                    # Redis客户端
 
-# ===== 可视化 =====
-plotly>=5.17.0
-matplotlib==3.9.0
-wordcloud==1.9.3
+# ===== 数据可视化 =====
+plotly>=5.17.0                  # 交互式图表
+matplotlib==3.9.0               # 静态图表绘制
+wordcloud==1.9.3                # 词云生成
 
 # ===== 工具库 =====
-python-dotenv>=1.0.0
-python-dateutil>=2.8.2
-pytz>=2023.3
-tqdm>=4.65.0
-tenacity==8.2.2
-loguru>=0.7.0
-pydantic==2.5.2
+python-dotenv>=1.0.0            # 环境变量管理
+python-dateutil>=2.8.2          # 日期时间处理
+pytz>=2023.3                    # 时区支持
+tqdm>=4.65.0                    # 进度条显示
+tenacity==8.2.2                 # 重试机制
+loguru>=0.7.0                   # 日志管理
+pydantic==2.5.2                 # 数据验证
+cryptography>=41.0.0            # 加密解密库
+garminconnect>=0.2.0            # Garmin Connect API
 
 # ===== 开发工具（可选） =====
-pytest>=7.4.0
-black>=23.0.0
-flake8>=6.0.0
-
-# ===== Web服务器 =====
-fastapi==0.110.2
-uvicorn==0.29.0
-
-garminconnect
-sqlalchemy
+pytest>=7.4.0                   # 单元测试框架
+black>=23.0.0                   # 代码格式化
+flake8>=6.0.0                   # 代码风格检查
